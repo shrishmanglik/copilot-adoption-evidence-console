@@ -37,7 +37,10 @@ function currentVersionSources(
 ): SourceRecord[] {
   return input.sourceRecords.filter(
     (source) =>
-      source.kind === kind && source.productVersion === input.productVersion,
+      source.kind === kind &&
+      source.productVersion === input.productVersion &&
+      source.scope.accountId === input.accountId &&
+      source.scope.segment === input.segment,
   );
 }
 
@@ -61,7 +64,111 @@ function detectRecordIntegrity(input: WorkflowEvidence): EvidenceIssue[] {
         "A source record timestamp is invalid or later than evaluation time",
     });
   }
+  if (
+    input.sourceRecords.some(
+      (source) =>
+        source.scope.accountId !== input.accountId ||
+        source.scope.segment !== input.segment,
+    )
+  ) {
+    issues.push({
+      field: "source_scope_identity",
+      reason: "A source record belongs to a different account or segment",
+    });
+  }
   return issues;
+}
+
+function detectChronology(input: WorkflowEvidence): EvidenceIssue[] {
+  const baseline = input.sourceRecords.find(
+    (source) =>
+      source.kind === "BASELINE" &&
+      source.scope.accountId === input.accountId &&
+      source.scope.segment === input.segment &&
+      source.baseline?.workflowId === input.id &&
+      source.baseline.eligibleUsers === input.eligibleUsers,
+  );
+  const enablement = currentVersionSources(input, "ENABLEMENT").find(
+    (source) =>
+      source.enablement?.workflowId === input.id &&
+      sameInstant(source.observedAt, input.enabledAt),
+  );
+  const clinic = currentVersionSources(input, "CLINIC").find(
+    (source) =>
+      source.clinic?.workflowId === input.id &&
+      sameInstant(source.observedAt, input.firstValueAt),
+  );
+  const validation = currentVersionSources(input, "VALIDATION").find(
+    (source) =>
+      source.validation?.state === "APPROVED" &&
+      sameInstant(source.observedAt, input.customerValidationAt),
+  );
+
+  let invalid = false;
+  if (
+    baseline &&
+    enablement &&
+    Date.parse(baseline.observedAt) > Date.parse(enablement.observedAt)
+  ) {
+    invalid = true;
+  }
+  if (
+    enablement &&
+    clinic &&
+    Date.parse(enablement.observedAt) > Date.parse(clinic.observedAt)
+  ) {
+    invalid = true;
+  }
+
+  for (const blocker of input.blockers) {
+    const blockerSource = currentVersionSources(input, "BLOCKER").find(
+      (source) => source.blocker?.blockerId === blocker.id,
+    );
+    const actionSource = currentVersionSources(input, "ACTION").find(
+      (source) => source.action?.blockerId === blocker.id,
+    );
+    if (
+      clinic &&
+      blockerSource &&
+      Date.parse(blockerSource.observedAt) < Date.parse(clinic.observedAt)
+    ) {
+      invalid = true;
+    }
+    if (
+      blockerSource &&
+      actionSource &&
+      Date.parse(actionSource.observedAt) < Date.parse(blockerSource.observedAt)
+    ) {
+      invalid = true;
+    }
+  }
+
+  if (validation) {
+    const validationTime = Date.parse(validation.observedAt);
+    const prerequisiteSources = [
+      clinic,
+      ...currentVersionSources(input, "ACTION"),
+      ...currentVersionSources(input, "RELEASE"),
+      ...currentVersionSources(input, "USAGE_SNAPSHOT"),
+    ].filter((source): source is SourceRecord => Boolean(source));
+    if (
+      prerequisiteSources.some(
+        (source) => Date.parse(source.observedAt) > validationTime,
+      )
+    ) {
+      invalid = true;
+    }
+  }
+
+  return invalid
+    ? [
+        {
+          field: "evidence_chronology",
+          reason:
+            "Evidence events are not ordered from baseline through current-version validation",
+        },
+      ]
+    : [];
 }
 
 function detectCurrentRelease(input: WorkflowEvidence): EvidenceIssue[] {
@@ -79,6 +186,8 @@ function detectFoundationChain(input: WorkflowEvidence): EvidenceIssue[] {
   const baseline = input.sourceRecords.find(
     (source) =>
       source.kind === "BASELINE" &&
+      source.scope.accountId === input.accountId &&
+      source.scope.segment === input.segment &&
       source.baseline?.workflowId === input.id &&
       source.baseline?.eligibleUsers === input.eligibleUsers,
   );
@@ -257,6 +366,7 @@ export function evaluateAdoption(input: WorkflowEvidence): DecisionReceipt {
 
   const evidenceIssues = [
     ...detectRecordIntegrity(input), // MUTATION_POINT:RECORD_INTEGRITY
+    ...detectChronology(input), // MUTATION_POINT:CHRONOLOGY
     ...detectFoundationChain(input), // MUTATION_POINT:FOUNDATION_CHAIN
     ...detectBlockerActionChain(input), // MUTATION_POINT:BLOCKER_ACTION
     ...detectCurrentRelease(input), // MUTATION_POINT:CURRENT_RELEASE
@@ -327,6 +437,7 @@ export function evaluateProofEligibility(
   input: WorkflowEvidence,
   adoption: DecisionReceipt,
 ): ProofDecisionReceipt {
+  const proofCandidateId = `proof-${input.id}`;
   const currentUsage = currentVersionSources(input, "USAGE_SNAPSHOT").filter(
     (source) => source.usage,
   );
@@ -339,13 +450,24 @@ export function evaluateProofEligibility(
       source.playbook?.sourceWorkflowId === input.id &&
       source.playbook.status === "CANDIDATE_HUMAN_REVIEW",
   );
+  const caveats = currentVersionSources(input, "CAVEAT").filter(
+    (source) =>
+      source.caveat?.scope === "PROOF" &&
+      source.caveat.proofCandidateId === proofCandidateId &&
+      source.caveat.text.trim().length > 0 &&
+      (!source.caveat.expiresAt ||
+        Date.parse(source.caveat.expiresAt) > Date.parse(input.asOf)),
+  );
   const approvals = (
     approvalType: NonNullable<SourceRecord["approval"]>["type"],
   ) =>
     input.sourceRecords.filter(
       (source) =>
         source.kind === "APPROVAL" &&
-        source.approval?.type === approvalType &&
+        source.scope.accountId === input.accountId &&
+        source.scope.segment === input.segment &&
+        source.approval?.proofCandidateId === proofCandidateId &&
+        source.approval.type === approvalType &&
         source.approval.state === "APPROVED" &&
         source.approval.requestedByActorId !==
           source.approval.approverActorId &&
@@ -361,6 +483,12 @@ export function evaluateProofEligibility(
       sourceRecordIds: currentUsage.map((source) => source.id),
     },
     {
+      id: "METRIC_APPROVAL",
+      label: "Named metric approval",
+      present: approvals("METRIC").length > 0,
+      sourceRecordIds: approvals("METRIC").map((source) => source.id),
+    },
+    {
       id: "CURRENT_VERSION",
       label: "Current product version",
       present: release.length > 0,
@@ -368,15 +496,27 @@ export function evaluateProofEligibility(
     },
     {
       id: "CUSTOMER_VALIDATION",
-      label: "Customer approval",
+      label: "Current workflow validation",
       present: validation.length > 0,
       sourceRecordIds: validation.map((source) => source.id),
+    },
+    {
+      id: "CUSTOMER_PROOF_CONSENT",
+      label: "Customer proof-use consent",
+      present: approvals("CUSTOMER").length > 0,
+      sourceRecordIds: approvals("CUSTOMER").map((source) => source.id),
     },
     {
       id: "PLAYBOOK_SOURCE",
       label: "Playbook candidate source",
       present: playbooks.length > 0,
       sourceRecordIds: playbooks.map((source) => source.id),
+    },
+    {
+      id: "CAVEATS",
+      label: "Proof limitations and caveats",
+      present: caveats.length > 0,
+      sourceRecordIds: caveats.map((source) => source.id),
     },
     ...(["PRIVACY", "WORDING", "PUBLICATION"] as const).map(
       (approvalType): ProofGate => {
@@ -400,6 +540,7 @@ export function evaluateProofEligibility(
     .map((gate) => gate.id);
   return {
     workflowId: input.id,
+    proofCandidateId,
     status:
       adoption.state !== "VERIFIED_ADOPTION"
         ? "NOT_ELIGIBLE"

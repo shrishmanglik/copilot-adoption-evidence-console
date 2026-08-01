@@ -22,7 +22,7 @@ export default function ProofPage() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                Candidate proof-001
+                Candidate {candidate.proof.proofCandidateId}
               </p>
               <h2 className="mt-2 text-xl font-semibold">
                 Variance-analysis workflow adoption

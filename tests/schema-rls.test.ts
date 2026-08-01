@@ -28,7 +28,7 @@ describe("Supabase schema contract", () => {
   it("makes the audit event store append-only", () => {
     expect(sql).toContain("before update or delete on public.audit_events");
     expect(sql).toContain(
-      "evidence, receipts, approvals, and audit events are append-only",
+      "evidence, receipts, receipt sources, proof candidates, approvals, and audit events are append-only",
     );
   });
 
@@ -43,12 +43,14 @@ describe("Supabase schema contract", () => {
     for (const table of [
       "evidence_records",
       "adoption_receipts",
+      "adoption_receipt_sources",
+      "proof_candidates",
       "approvals",
     ]) {
       expect(sql).toContain(`before update or delete on public.${table}`);
     }
     expect(sql).not.toMatch(
-      /create policy \w+ on public\.(evidence_records|adoption_receipts|approvals) for (update|delete)/,
+      /create policy \w+ on public\.(evidence_records|adoption_receipts|adoption_receipt_sources|proof_candidates|approvals) for (update|delete)/,
     );
   });
 
@@ -103,5 +105,36 @@ describe("Supabase schema contract", () => {
     }
     expect(sql).not.toContain("references public.customer_accounts(id)");
     expect(sql).not.toContain("references public.workflow_definitions(id)");
+  });
+
+  it("binds every persisted actor to membership in the same tenant", () => {
+    for (const relationship of [
+      "foreign key (organization_id, owner_user_id) references public.memberships(organization_id, user_id)",
+      "foreign key (organization_id, created_by) references public.memberships(organization_id, user_id)",
+      "foreign key (organization_id, requested_by_user_id) references public.memberships(organization_id, user_id)",
+      "foreign key (organization_id, approver_user_id) references public.memberships(organization_id, user_id)",
+      "foreign key (organization_id, actor_user_id) references public.memberships(organization_id, user_id)",
+    ]) {
+      expect(sql).toContain(relationship);
+    }
+    expect(sql.match(/references auth\.users\(id\)/g)).toHaveLength(1);
+  });
+
+  it("normalizes receipt evidence and proof approval references", () => {
+    expect(sql).not.toContain("source_record_ids jsonb");
+    expect(sql).not.toContain("subject_id uuid");
+    expect(sql).not.toContain("subject_type text");
+    expect(sql).toContain(
+      "foreign key (organization_id, workflow_id, receipt_id) references public.adoption_receipts(organization_id, workflow_id, id)",
+    );
+    expect(sql).toContain(
+      "foreign key (organization_id, workflow_id, evidence_record_id) references public.evidence_records(organization_id, workflow_id, id)",
+    );
+    expect(sql).toContain(
+      "foreign key (organization_id, workflow_id, proof_candidate_id) references public.proof_candidates(organization_id, workflow_id, id)",
+    );
+    expect(sql).toContain(
+      "foreign key (organization_id, workflow_id, caveat_evidence_record_id) references public.evidence_records(organization_id, workflow_id, id)",
+    );
   });
 });

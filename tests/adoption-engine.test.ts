@@ -43,6 +43,30 @@ describe("critical adoption validator", () => {
     expect(result.heldFields).toContain("valid_source_timestamps");
   });
 
+  it("rejects evidence chronology when validation predates a source event", () => {
+    for (const lateKind of ["ACTION", "RELEASE"] as const) {
+      const input = structuredClone(syntheticWorkflows.verified);
+      const source = input.sourceRecords.find(
+        (record) => record.kind === lateKind,
+      );
+      if (!source) throw new Error(`fixture must include ${lateKind}`);
+      source.observedAt = "2026-08-01T11:00:00.000Z";
+      const result = evaluateAdoption(input);
+      expect(result.state).toBe("UNKNOWN");
+      expect(result.heldFields).toContain("evidence_chronology");
+    }
+  });
+
+  it("rejects source evidence scoped to another account or segment", () => {
+    for (const field of ["accountId", "segment"] as const) {
+      const input = structuredClone(syntheticWorkflows.verified);
+      input[field] = `different-${field}`;
+      const result = evaluateAdoption(input);
+      expect(result.state).toBe("UNKNOWN");
+      expect(result.heldFields).toContain("source_scope_identity");
+    }
+  });
+
   it("rejects a usage summary that does not match its source version and counts", () => {
     const input = structuredClone(syntheticWorkflows.verified);
     const current = input.sourceRecords.find(
@@ -117,18 +141,35 @@ describe("critical adoption validator", () => {
       adoption,
     );
     expect(proof.status).toBe("ELIGIBLE_HELD");
-    expect(proof.heldGateIds).toEqual(["PRIVACY", "WORDING", "PUBLICATION"]);
+    expect(proof.heldGateIds).toEqual([
+      "METRIC_APPROVAL",
+      "CUSTOMER_PROOF_CONSENT",
+      "PRIVACY",
+      "WORDING",
+      "PUBLICATION",
+    ]);
   });
 
   it("makes proof eligible only from exact approval records", () => {
     const input = structuredClone(syntheticWorkflows.verified);
-    for (const approvalType of ["PRIVACY", "WORDING", "PUBLICATION"] as const) {
+    for (const approvalType of [
+      "CUSTOMER",
+      "METRIC",
+      "PRIVACY",
+      "WORDING",
+      "PUBLICATION",
+    ] as const) {
       input.sourceRecords.push({
         id: `src-approval-${approvalType.toLowerCase()}`,
         kind: "APPROVAL",
         version: "approval.v1",
         observedAt: input.asOf,
+        scope: {
+          accountId: input.accountId,
+          segment: input.segment,
+        },
         approval: {
+          proofCandidateId: `proof-${input.id}`,
           type: approvalType,
           state: "APPROVED",
           requestedByActorId: "synthetic-requester",
@@ -150,7 +191,9 @@ describe("critical adoption validator", () => {
       kind: "APPROVAL",
       version: "approval.v1",
       observedAt: input.asOf,
+      scope: { accountId: input.accountId, segment: input.segment },
       approval: {
+        proofCandidateId: `proof-${input.id}`,
         type: "PRIVACY",
         state: "APPROVED",
         requestedByActorId: "synthetic-same-actor",
@@ -162,6 +205,60 @@ describe("critical adoption validator", () => {
     const proof = evaluateProofEligibility(input, evaluateAdoption(input));
     expect(proof.status).toBe("ELIGIBLE_HELD");
     expect(proof.heldGateIds).toContain("PRIVACY");
+  });
+
+  it("rejects an approval issued for another proof candidate", () => {
+    const input = structuredClone(syntheticWorkflows.verified);
+    input.sourceRecords.push({
+      id: "src-approval-wrong-candidate",
+      kind: "APPROVAL",
+      version: "approval.v1",
+      observedAt: input.asOf,
+      scope: { accountId: input.accountId, segment: input.segment },
+      approval: {
+        proofCandidateId: "proof-another-workflow",
+        type: "CUSTOMER",
+        state: "APPROVED",
+        requestedByActorId: "synthetic-requester",
+        approverActorId: "synthetic-customer-reviewer",
+      },
+      synthetic: true,
+    });
+    const proof = evaluateProofEligibility(input, evaluateAdoption(input));
+    expect(proof.heldGateIds).toContain("CUSTOMER_PROOF_CONSENT");
+  });
+
+  it("keeps proof held when an explicit caveat record is absent", () => {
+    const input = structuredClone(syntheticWorkflows.verified);
+    input.sourceRecords = input.sourceRecords.filter(
+      (source) => source.kind !== "CAVEAT",
+    );
+    for (const approvalType of [
+      "CUSTOMER",
+      "METRIC",
+      "PRIVACY",
+      "WORDING",
+      "PUBLICATION",
+    ] as const) {
+      input.sourceRecords.push({
+        id: `src-caveat-test-${approvalType.toLowerCase()}`,
+        kind: "APPROVAL",
+        version: "approval.v1",
+        observedAt: input.asOf,
+        scope: { accountId: input.accountId, segment: input.segment },
+        approval: {
+          proofCandidateId: `proof-${input.id}`,
+          type: approvalType,
+          state: "APPROVED",
+          requestedByActorId: "synthetic-requester",
+          approverActorId: `synthetic-${approvalType.toLowerCase()}-reviewer`,
+        },
+        synthetic: true,
+      });
+    }
+    const proof = evaluateProofEligibility(input, evaluateAdoption(input));
+    expect(proof.status).toBe("ELIGIBLE_HELD");
+    expect(proof.heldGateIds).toEqual(["CAVEATS"]);
   });
 
   it("builds every trace stage from exact IDs rather than array position", () => {

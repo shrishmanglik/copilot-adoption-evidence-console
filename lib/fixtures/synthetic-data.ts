@@ -9,6 +9,16 @@ const common = {
   customerDisagrees: false,
 } as const;
 
+const planningScope = {
+  scope: { accountId: "syn-planning-a", segment: "Planning" },
+} as const;
+const reportingScope = {
+  scope: { accountId: "syn-reporting-b", segment: "Reporting" },
+} as const;
+const executiveScope = {
+  scope: { accountId: "syn-executive-c", segment: "Executive finance" },
+} as const;
+
 const staleEvidence: WorkflowEvidence = {
   ...common,
   id: "wf-planning-refresh",
@@ -41,6 +51,7 @@ const staleEvidence: WorkflowEvidence = {
   ],
   sourceRecords: [
     {
+      ...planningScope,
       id: "src-baseline-101",
       kind: "BASELINE",
       version: "baseline.v1",
@@ -49,6 +60,7 @@ const staleEvidence: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...planningScope,
       id: "src-enablement-101",
       kind: "ENABLEMENT",
       version: "enablement.v1",
@@ -58,6 +70,7 @@ const staleEvidence: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...planningScope,
       id: "src-clinic-101",
       kind: "CLINIC",
       version: "clinic.v1",
@@ -67,6 +80,7 @@ const staleEvidence: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...planningScope,
       id: "src-blocker-101",
       kind: "BLOCKER",
       version: "blocker.v1",
@@ -81,6 +95,7 @@ const staleEvidence: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...planningScope,
       id: "src-action-101",
       kind: "ACTION",
       version: "action.v1",
@@ -95,6 +110,7 @@ const staleEvidence: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...planningScope,
       id: "src-release-101",
       kind: "RELEASE",
       version: "release.v1",
@@ -103,6 +119,7 @@ const staleEvidence: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...planningScope,
       id: "src-usage-101",
       kind: "USAGE_SNAPSHOT",
       version: "usage.v1",
@@ -113,6 +130,7 @@ const staleEvidence: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...planningScope,
       id: "src-validation-101",
       kind: "VALIDATION",
       version: "validation.v1",
@@ -157,6 +175,7 @@ const pendingValidation: WorkflowEvidence = {
   ],
   sourceRecords: [
     {
+      ...reportingScope,
       id: "src-baseline-202",
       kind: "BASELINE",
       version: "baseline.v1",
@@ -165,6 +184,7 @@ const pendingValidation: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...reportingScope,
       id: "src-enablement-202",
       kind: "ENABLEMENT",
       version: "enablement.v1",
@@ -174,6 +194,7 @@ const pendingValidation: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...reportingScope,
       id: "src-clinic-202",
       kind: "CLINIC",
       version: "clinic.v1",
@@ -183,6 +204,7 @@ const pendingValidation: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...reportingScope,
       id: "src-blocker-202",
       kind: "BLOCKER",
       version: "blocker.v1",
@@ -198,6 +220,7 @@ const pendingValidation: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...reportingScope,
       id: "src-action-202",
       kind: "ACTION",
       version: "action.v1",
@@ -212,6 +235,7 @@ const pendingValidation: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...reportingScope,
       id: "src-release-202",
       kind: "RELEASE",
       version: "release.v1",
@@ -220,6 +244,7 @@ const pendingValidation: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...reportingScope,
       id: "src-usage-202-a",
       kind: "USAGE_SNAPSHOT",
       version: "usage.v1",
@@ -230,6 +255,7 @@ const pendingValidation: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...reportingScope,
       id: "src-usage-202-b",
       kind: "USAGE_SNAPSHOT",
       version: "usage.v1",
@@ -276,6 +302,7 @@ const verified: WorkflowEvidence = {
   ],
   sourceRecords: [
     {
+      ...executiveScope,
       id: "src-baseline-303",
       kind: "BASELINE",
       version: "baseline.v1",
@@ -284,6 +311,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-enablement-303",
       kind: "ENABLEMENT",
       version: "enablement.v1",
@@ -293,6 +321,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-clinic-303",
       kind: "CLINIC",
       version: "clinic.v1",
@@ -302,6 +331,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-blocker-303",
       kind: "BLOCKER",
       version: "blocker.v1",
@@ -317,6 +347,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-action-303",
       kind: "ACTION",
       version: "action.v1",
@@ -331,6 +362,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-release-303",
       kind: "RELEASE",
       version: "release.v1",
@@ -339,6 +371,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-usage-303-a",
       kind: "USAGE_SNAPSHOT",
       version: "usage.v1",
@@ -349,6 +382,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-usage-303-b",
       kind: "USAGE_SNAPSHOT",
       version: "usage.v1",
@@ -359,6 +393,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-usage-303-c",
       kind: "USAGE_SNAPSHOT",
       version: "usage.v1",
@@ -369,6 +404,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-validation-303",
       kind: "VALIDATION",
       version: "validation.v1",
@@ -378,6 +414,7 @@ const verified: WorkflowEvidence = {
       synthetic: true,
     },
     {
+      ...executiveScope,
       id: "src-playbook-303",
       kind: "PLAYBOOK",
       version: "playbook.v1",
@@ -387,6 +424,21 @@ const verified: WorkflowEvidence = {
         sourceWorkflowId: "wf-variance-analysis",
         status: "CANDIDATE_HUMAN_REVIEW",
         sourceAccountCount: 1,
+      },
+      synthetic: true,
+    },
+    {
+      ...executiveScope,
+      id: "src-caveat-303",
+      kind: "CAVEAT",
+      version: "caveat.v1",
+      productVersion: "2026.7",
+      observedAt: "2026-08-01T10:30:00.000Z",
+      caveat: {
+        proofCandidateId: "proof-wf-variance-analysis",
+        scope: "PROOF",
+        text: "Synthetic single-account evidence; no outcome, demand, or cross-segment claim.",
+        ownerActorId: "synthetic-product-adoption-lead",
       },
       synthetic: true,
     },

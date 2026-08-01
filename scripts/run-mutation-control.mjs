@@ -16,6 +16,11 @@ const mutants = [
     expectedTest: "rejects an invalid or future source timestamp",
   },
   {
+    id: "CHRONOLOGY",
+    expectedTest:
+      "rejects evidence chronology when validation predates a source event",
+  },
+  {
     id: "FOUNDATION_CHAIN",
     expectedTest:
       "invalidates adoption when the clinic first-value source is removed",

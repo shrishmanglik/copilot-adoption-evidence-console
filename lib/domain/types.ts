@@ -44,10 +44,12 @@ export interface SourceRecord {
     | "RELEASE"
     | "VALIDATION"
     | "PLAYBOOK"
+    | "CAVEAT"
     | "APPROVAL";
   version: string;
   productVersion?: string;
   observedAt: string;
+  scope: { accountId: string; segment: string };
   baseline?: { workflowId: string; eligibleUsers: number };
   enablement?: { workflowId: string };
   clinic?: { workflowId: string; outcome: "FIRST_VALUE" };
@@ -78,8 +80,16 @@ export interface SourceRecord {
     state: ValidationState;
     customerDisagrees: boolean;
   };
+  caveat?: {
+    proofCandidateId: string;
+    scope: "PROOF";
+    text: string;
+    ownerActorId: string;
+    expiresAt?: string;
+  };
   approval?: {
-    type: "PRIVACY" | "WORDING" | "PUBLICATION";
+    proofCandidateId: string;
+    type: "CUSTOMER" | "METRIC" | "PRIVACY" | "WORDING" | "PUBLICATION";
     state: "APPROVED" | "REJECTED" | "WITHDRAWN";
     requestedByActorId: string;
     approverActorId: string;
@@ -143,9 +153,12 @@ export interface DecisionReceipt {
 export interface ProofGate {
   id:
     | "METRIC_SOURCE"
+    | "METRIC_APPROVAL"
     | "CURRENT_VERSION"
     | "CUSTOMER_VALIDATION"
+    | "CUSTOMER_PROOF_CONSENT"
     | "PLAYBOOK_SOURCE"
+    | "CAVEATS"
     | "PRIVACY"
     | "WORDING"
     | "PUBLICATION";
@@ -173,6 +186,7 @@ export interface EvidenceTraceStage {
 
 export interface ProofDecisionReceipt {
   workflowId: string;
+  proofCandidateId: string;
   status: "NOT_ELIGIBLE" | "ELIGIBLE_HELD" | "ELIGIBLE";
   gates: ProofGate[];
   heldGateIds: ProofGate["id"][];

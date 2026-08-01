@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const attributes = readFileSync(".gitattributes", "utf8");
+const readme = readFileSync("README.md", "utf8");
 
 describe("repository checkout reproducibility", () => {
   it("enforces LF for text files across Windows and Linux clones", () => {
@@ -23,5 +24,12 @@ describe("repository checkout reproducibility", () => {
         { encoding: "utf8" },
       ),
     ).toContain("public/adoption-dashboard.png: binary: set");
+  });
+
+  it("pins the public quickstart to the implemented review branch", () => {
+    expect(readme).toContain(
+      "git clone --branch dev/copilot-adoption-evidence-console-initial-build --single-branch https://github.com/shrishmanglik/copilot-adoption-evidence-console.git",
+    );
+    expect(readme).toContain("the default branch is not yet the setup target");
   });
 });

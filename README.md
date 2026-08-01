@@ -56,9 +56,9 @@ flowchart LR
 ```
 
 - UI: Next.js 16 App Router, React 19, TypeScript, Tailwind CSS v4, and shadcn-style local primitives.
-- Domain: typed baseline, enablement, clinic, blocker, action, release, usage, validation, playbook, approval, receipt, metric, and import contracts.
+- Domain: account- and segment-scoped baseline, enablement, clinic, blocker, action, release, usage, validation, playbook, caveat, approval, receipt, metric, and import contracts.
 - Service boundary: pure application services mediate between route handlers, rules, fixtures, and future adapters.
-- Persistence: the running demo is fixture-backed. A forward and rollback Supabase migration defines the production contract; every created table has RLS with role- and operation-specific policies. Composite `(organization_id, parent_id)` foreign keys prevent cross-tenant parent references. Viewers cannot write, consequential records are append-only, and approval policies bind a different requester to a signed-in role-specific approver.
+- Persistence: the running demo is fixture-backed. A forward and rollback Supabase migration defines the production contract; every created table has RLS with role- and operation-specific policies. Composite tenant keys bind parents, receipt sources, proof candidates, and every actor to organization membership. Viewers cannot write, consequential records are append-only, and approval policies bind a different requester to a signed-in role-specific approver.
 - Audit: state decisions identify the ruleset, reasons, held fields, sources, time, and human authority.
 
 See [architecture.md](./docs/architecture.md) for boundaries and failure semantics.
@@ -71,7 +71,7 @@ See [architecture.md](./docs/architecture.md) for boundaries and failure semanti
 | AI assistance          | Proposed only: summarization, clustering, question suggestions, and neutral follow-up drafts. There is no runtime AI call in this build.             |
 | Human authority        | Blocker cause, sentiment, accuracy, metric definition, product acceptance, customer validation, privacy, customer proof, and publication.            |
 
-Seven critical detectors are mutation-tested without a runtime bypass: record integrity, foundation chain, blocker/action chain, current release, current usage, repeat-use evidence, and customer validation. Disabling each detector in the test harness must fail its bound negative assertion; restoring the exact source must pass twice.
+Eight critical detectors are mutation-tested without a runtime bypass: record integrity, chronology, foundation chain, blocker/action chain, current release, current usage, repeat-use evidence, and customer validation. Disabling each detector in the test harness must fail its bound negative assertion; restoring the exact source must pass twice.
 
 ## Implemented versus proposed
 
@@ -84,8 +84,8 @@ Seven critical detectors are mutation-tested without a runtime bypass: record in
 - Clinic receipt API with validation, error/retry, undo, and explicit non-persistence.
 - Governed blocker-action, customer-validation, and playbook-candidate receipt API with validation, retry, undo, human holds, and no external action.
 - Versioned export contract with sources, held fields, scope, generation time, and caveats.
-- Evidence-bound proof decisions computed from the same source records as adoption; no counter or proof gate is hard-coded.
-- Supabase forward/rollback schema with least-privilege RLS checks and append-only evidence, receipts, approvals, and audit events.
+- Evidence-bound proof decisions computed from the same source records as adoption, with separate workflow validation, customer proof-use consent, metric approval, caveats, privacy, wording, and publication gates; no counter or proof gate is hard-coded.
+- Supabase forward/rollback schema with least-privilege RLS checks, normalized receipt-source and proof-candidate references, tenant-bound actors, and append-only evidence, receipts, proof candidates, approvals, and audit events.
 - Repository-enforced LF checkout via `.gitattributes` for Windows/Linux format reproducibility.
 - Unit/contract, mutation, type, lint, build, accessibility, E2E, and mobile overflow checks.
 
@@ -118,11 +118,13 @@ This is a hypothesis, not validated demand. The repository contains no customers
 Requirements: Node.js 20.9+ and npm.
 
 ```bash
-git clone https://github.com/shrishmanglik/copilot-adoption-evidence-console.git
+git clone --branch dev/copilot-adoption-evidence-console-initial-build --single-branch https://github.com/shrishmanglik/copilot-adoption-evidence-console.git
 cd copilot-adoption-evidence-console
 npm ci
 npm run dev
 ```
+
+The branch is pinned because the implemented application is currently under review in PR #1; the default branch is not yet the setup target. After merge, `main` becomes the stable quickstart branch.
 
 Open `http://localhost:3000`. No `.env` file is needed.
 
@@ -140,9 +142,9 @@ npm run test:e2e
 
 Current local evidence at author handoff:
 
-- Unit/contract suite: 40/40 passed across 7 files.
+- Unit/contract suite: 47/47 passed across 7 files.
 - Browser suite: 2/2 passed, including keyboard-contained evidence inspection, focus restoration, all four counter drill-downs, clinic, blocker, validation, and playbook workflows, serious/critical axe scan, and 390 px overflow check.
-- Mutation control: all 7 critical detectors failed their bound negative tests when disabled; restored source passed twice.
+- Mutation control: all 8 critical detectors failed their bound negative tests when disabled; restored source passed twice.
 - TypeScript, ESLint, Next.js production build, and dependency audit: passed.
 
 ## Recovery and operations

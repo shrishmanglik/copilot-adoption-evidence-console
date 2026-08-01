@@ -13,7 +13,10 @@ function ids(records: SourceRecord[]) {
 function current(input: WorkflowEvidence, kind: SourceRecord["kind"]) {
   return input.sourceRecords.filter(
     (record) =>
-      record.kind === kind && record.productVersion === input.productVersion,
+      record.kind === kind &&
+      record.productVersion === input.productVersion &&
+      record.scope.accountId === input.accountId &&
+      record.scope.segment === input.segment,
   );
 }
 
@@ -25,6 +28,8 @@ export function buildEvidenceTrace(
   const baseline = input.sourceRecords.filter(
     (record) =>
       record.kind === "BASELINE" &&
+      record.scope.accountId === input.accountId &&
+      record.scope.segment === input.segment &&
       record.baseline?.workflowId === input.id &&
       record.baseline?.eligibleUsers === input.eligibleUsers,
   );
