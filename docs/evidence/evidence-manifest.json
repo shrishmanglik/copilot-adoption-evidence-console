@@ -7,7 +7,7 @@
       "status": "VERIFIED",
       "claims": [
         "Source exists on the named non-default branch",
-        "Local unit, mutation, type, lint, build, browser, accessibility, mobile-overflow, and audit checks are executed before PR handoff"
+        "Local 29-test unit/contract suite, five-detector mutation control, type, lint, format, build, clean-build, browser, accessibility, mobile-overflow, dependency-audit, and secret-scan checks passed before review handoff"
       ],
       "evidence": [
         "docs/evidence/qa-summary.md",
@@ -25,9 +25,14 @@
       ],
       "repository": "https://github.com/shrishmanglik/copilot-adoption-evidence-console",
       "branch": "dev/copilot-adoption-evidence-console-initial-build",
-      "implementationCommit": "4b7a00dbf39c80173ab9105766b3d1770492960a",
+      "implementationCommit": "3cf65655a0bc3dd01385a9d1e5cfc5a431a52217",
       "pullRequest": "https://github.com/shrishmanglik/copilot-adoption-evidence-console/pull/1",
-      "hostedChecks": "UNKNOWN_PENDING_PROVIDER_RUN"
+      "hostedChecks": {
+        "status": "VERIFIED_REAL_STEPS",
+        "run": "https://github.com/shrishmanglik/copilot-adoption-evidence-console/actions/runs/30701923566/job/91374313343",
+        "result": "SUCCESS",
+        "scope": "install, audit, secret scan, five mutation kills, 29 tests, typecheck, lint, format, build, clean checkout, Chromium E2E"
+      }
     },
     "provider": {
       "status": "UNKNOWN",
@@ -41,6 +46,12 @@
         "No customers, demand, outcomes, pricing acceptance, revenue, or affiliation is claimed"
       ]
     }
+  },
+  "distinctReview": {
+    "status": "REVISE_REMEDIATED_FRESH_REVIEW_REQUIRED",
+    "reviewedCommit": "afb169ff7ef8c7fc6b01c44625fb5dc3675436ea",
+    "findingCount": 6,
+    "boundary": "The first reviewer did not approve the build; all findings were remediated on a new author commit and require a new distinct reviewer."
   },
   "correctedGaps": [
     "Original dispatch named a retired authority root; live canon resolved the current Tier 1 authority root before mutation",
