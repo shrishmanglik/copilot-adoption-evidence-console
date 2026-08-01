@@ -1,0 +1,59 @@
+=== MUTATED_DETECTOR_DISABLED_EXPECT_FAIL ===
+exit=1
+
+ RUN  v3.2.7 <repo>
+
+  tests/adoption-engine.test.ts (3 tests | 1 failed) 13ms
+    critical adoption validator > holds stale critical evidence as UNKNOWN 11ms
+      expected 'FIRST_VALUE' to be 'UNKNOWN' // Object.is equality
+    critical adoption validator > does not treat internal resolution as customer-validated closure 1ms
+    critical adoption validator > allows verified adoption only with repeat use and current human validation 0ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  09:01:29
+   Duration  801ms (transform 103ms, setup 0ms, collect 104ms, tests 13ms, environment 0ms, prepare 363ms)
+
+
+
+ Failed Tests 1
+
+ FAIL  tests/adoption-engine.test.ts > critical adoption validator > holds stale critical evidence as UNKNOWN
+AssertionError: expected 'FIRST_VALUE' to be 'UNKNOWN' // Object.is equality
+
+Expected: "UNKNOWN"
+Received: "FIRST_VALUE"
+
+  tests/adoption-engine.test.ts:8:26
+      6|   it("holds stale critical evidence as UNKNOWN", () => {
+      7|     const result = evaluateAdoption(syntheticWorkflows.staleEvidence);
+      8|     expect(result.state).toBe("UNKNOWN");
+       |                          ^
+      9|     expect(result.heldFields).toContain("current_usage_snapshot");
+     10|   });
+
+[1/1]
+
+=== RESTORED_RUN_1_EXPECT_PASS ===
+exit=0
+
+ RUN  v3.2.7 <repo>
+
+  tests/adoption-engine.test.ts (3 tests) 4ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  09:01:31
+   Duration  755ms (transform 50ms, setup 0ms, collect 58ms, tests 4ms, environment 0ms, prepare 227ms)
+
+=== RESTORED_RUN_2_EXPECT_PASS ===
+exit=0
+
+ RUN  v3.2.7 <repo>
+
+  tests/adoption-engine.test.ts (3 tests) 5ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  09:01:32
+   Duration  659ms (transform 55ms, setup 0ms, collect 66ms, tests 5ms, environment 0ms, prepare 144ms)

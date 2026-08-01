@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "evidence-manifest.v1",
+  "generatedOn": "2026-08-01",
+  "scope": "copilot-adoption-evidence-console initial build",
+  "truthClasses": {
+    "local": {
+      "status": "VERIFIED",
+      "claims": [
+        "Source exists on the named non-default branch",
+        "Local unit, mutation, type, lint, build, browser, accessibility, mobile-overflow, and audit checks are executed before PR handoff"
+      ],
+      "evidence": [
+        "docs/evidence/qa-summary.md",
+        "evidence/qa/mutation-control.txt",
+        "public/adoption-dashboard.png",
+        "public/recruiter-console.png"
+      ]
+    },
+    "github": {
+      "status": "PARTIAL",
+      "claims": [
+        "Repository visibility, branch, commit, and PR are provider-verifiable after push"
+      ],
+      "repository": "https://github.com/shrishmanglik/copilot-adoption-evidence-console",
+      "branch": "dev/copilot-adoption-evidence-console-initial-build",
+      "pullRequest": "PENDING"
+    },
+    "provider": {
+      "status": "UNKNOWN",
+      "claims": [
+        "No deployment, live database, auth, RLS, billing, payment, or environment state is claimed"
+      ]
+    },
+    "customerAndCommercial": {
+      "status": "UNKNOWN",
+      "claims": [
+        "No customers, demand, outcomes, pricing acceptance, revenue, or affiliation is claimed"
+      ]
+    }
+  },
+  "correctedGaps": [
+    "Original dispatch named a retired authority root; live canon resolved the current Tier 1 authority root before mutation",
+    "The generic feature-build task still names a retired implementer persona and has no dedicated backlog row for this founder-issued work order"
+  ]
+}
