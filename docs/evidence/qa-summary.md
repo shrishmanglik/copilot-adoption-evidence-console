@@ -12,20 +12,21 @@ Observed failure: the test runner could not resolve `lib/domain/adoption-engine`
 
 ## Passing after
 
-| Gate                      | Command                        | Result                                                                    |
-| ------------------------- | ------------------------------ | ------------------------------------------------------------------------- |
-| Unit and contract tests   | `npm test`                     | 7 files, 40/40 passed                                                     |
-| Critical mutation control | `npm run test:mutation`        | 7 disabled detectors failed bound negatives; restored source passed twice |
-| TypeScript                | `npm run typecheck`            | passed, exit 0                                                            |
-| ESLint                    | `npm run lint`                 | passed with zero warnings, exit 0                                         |
-| Production build          | `npm run build`                | Next.js 16.2.12 compiled and generated all 14 static pages, exit 0        |
-| Generated-file stability  | pre/post build hashes          | `next-env.d.ts` and `tsconfig.json` hashes unchanged                      |
-| Checkout attributes       | repository contract tests      | LF enforced for text; PNG assets remain binary                            |
-| Browser journey           | `npm run test:e2e`             | 2/2 passed                                                                |
-| Accessibility             | primary browser journey        | zero serious/critical axe violations                                      |
-| Mobile layout             | 390 px browser journey         | zero page-level horizontal overflow                                       |
-| Dependency audit          | `npm audit --audit-level=high` | zero vulnerabilities                                                      |
-| Secret scan               | `npm run scan:secrets`         | 4 detectors proved; 73 repository files scanned; zero findings            |
+| Gate                      | Command                           | Result                                                                    |
+| ------------------------- | --------------------------------- | ------------------------------------------------------------------------- |
+| Unit and contract tests   | `npm test`                        | 7 files, 40/40 passed                                                     |
+| Critical mutation control | `npm run test:mutation`           | 7 disabled detectors failed bound negatives; restored source passed twice |
+| TypeScript                | `npm run typecheck`               | passed, exit 0                                                            |
+| ESLint                    | `npm run lint`                    | passed with zero warnings, exit 0                                         |
+| Production build          | `npm run build`                   | Next.js 16.2.12 compiled and generated all 14 static pages, exit 0        |
+| Generated-file stability  | pre/post build hashes             | `next-env.d.ts` and `tsconfig.json` hashes unchanged                      |
+| Checkout attributes       | repository contract tests         | LF enforced for text; PNG assets remain binary                            |
+| Windows cold clone        | `git -c core.autocrlf=true clone` | zero README CRLF pairs; format, 40 tests, build, mutation, and E2E passed |
+| Browser journey           | `npm run test:e2e`                | 2/2 passed                                                                |
+| Accessibility             | primary browser journey           | zero serious/critical axe violations                                      |
+| Mobile layout             | 390 px browser journey            | zero page-level horizontal overflow                                       |
+| Dependency audit          | `npm audit --audit-level=high`    | zero vulnerabilities                                                      |
+| Secret scan               | `npm run scan:secrets`            | 4 detectors proved; 73 repository files scanned; zero findings            |
 
 Critical mutation evidence is generated at `evidence/qa/mutation-control.txt`. The test-only control independently disables record-integrity, foundation-chain, blocker/action-chain, current-release, current-usage, repeat-use, and customer-validation detectors; each bound negative assertion must fail. It restores the exact source in `finally` and requires two consecutive passing runs. No runtime kill switch is shipped.
 

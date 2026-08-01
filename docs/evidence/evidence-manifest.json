@@ -7,7 +7,8 @@
       "status": "VERIFIED",
       "claims": [
         "Source exists on the named non-default branch",
-        "Local 29-test unit/contract suite, five-detector mutation control, type, lint, format, build, clean-build, browser, accessibility, mobile-overflow, dependency-audit, and secret-scan checks passed before review handoff"
+        "Local 40-test unit/contract suite, seven-detector mutation control, type, lint, format, build, clean-build, browser, accessibility, mobile-overflow, dependency-audit, and secret-scan checks passed before review handoff",
+        "A public Windows clone with core.autocrlf=true retained LF, passed format, stayed clean after build, and completed the primary browser journey"
       ],
       "evidence": [
         "docs/evidence/qa-summary.md",
@@ -25,13 +26,13 @@
       ],
       "repository": "https://github.com/shrishmanglik/copilot-adoption-evidence-console",
       "branch": "dev/copilot-adoption-evidence-console-initial-build",
-      "implementationCommit": "3cf65655a0bc3dd01385a9d1e5cfc5a431a52217",
+      "implementationCommit": "dfff1689acc0bd668117d497bfa39c24964906b2",
       "pullRequest": "https://github.com/shrishmanglik/copilot-adoption-evidence-console/pull/1",
       "hostedChecks": {
         "status": "VERIFIED_REAL_STEPS",
-        "run": "https://github.com/shrishmanglik/copilot-adoption-evidence-console/actions/runs/30701923566/job/91374313343",
+        "run": "https://github.com/shrishmanglik/copilot-adoption-evidence-console/actions/runs/30703098170/job/91377424156",
         "result": "SUCCESS",
-        "scope": "install, audit, secret scan, five mutation kills, 29 tests, typecheck, lint, format, build, clean checkout, Chromium E2E"
+        "scope": "install, audit, secret scan, seven mutation kills, 40 tests, typecheck, lint, format, build, clean checkout, Chromium E2E"
       }
     },
     "provider": {
@@ -49,9 +50,19 @@
   },
   "distinctReview": {
     "status": "REVISE_REMEDIATED_FRESH_REVIEW_REQUIRED",
-    "reviewedCommit": "afb169ff7ef8c7fc6b01c44625fb5dc3675436ea",
-    "findingCount": 6,
-    "boundary": "The first reviewer did not approve the build; all findings were remediated on a new author commit and require a new distinct reviewer."
+    "history": [
+      {
+        "reviewedCommit": "afb169ff7ef8c7fc6b01c44625fb5dc3675436ea",
+        "verdict": "REVISE",
+        "findingCount": 6
+      },
+      {
+        "reviewedCommit": "be9d4f9ebda9cf6ed5bcce50b7ade28ca746cb9f",
+        "verdict": "REVISE",
+        "findingCount": 4
+      }
+    ],
+    "boundary": "Neither prior reviewer approved the build; all findings were remediated on new author commits and require a fresh distinct reviewer."
   },
   "correctedGaps": [
     "Original dispatch named a retired authority root; live canon resolved the current Tier 1 authority root before mutation",
