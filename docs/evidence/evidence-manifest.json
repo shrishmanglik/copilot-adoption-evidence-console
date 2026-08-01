@@ -7,8 +7,8 @@
       "status": "VERIFIED",
       "claims": [
         "Source exists on the named non-default branch",
-        "Local 40-test unit/contract suite, seven-detector mutation control, type, lint, format, build, clean-build, browser, accessibility, mobile-overflow, dependency-audit, and secret-scan checks passed before review handoff",
-        "A public Windows clone with core.autocrlf=true retained LF, passed format, stayed clean after build, and completed the primary browser journey"
+        "Local 47-test unit/contract suite, eight-detector mutation control, type, lint, format, build, generated-file stability, browser, accessibility, mobile-overflow, dependency-audit, and secret-scan checks passed before review handoff",
+        "A public Windows clone of implementation commit 6f8edb1 with core.autocrlf=true retained LF and passed install, audit, secret scan, format, 47 tests, typecheck, lint, eight mutation kills with two restored passes, build, and the two-test browser journey"
       ],
       "evidence": [
         "docs/evidence/qa-summary.md",
@@ -26,13 +26,13 @@
       ],
       "repository": "https://github.com/shrishmanglik/copilot-adoption-evidence-console",
       "branch": "dev/copilot-adoption-evidence-console-initial-build",
-      "implementationCommit": "dfff1689acc0bd668117d497bfa39c24964906b2",
+      "implementationCommit": "6f8edb1b8d31e07dae9216946ef9ee4664d28153",
       "pullRequest": "https://github.com/shrishmanglik/copilot-adoption-evidence-console/pull/1",
       "hostedChecks": {
         "status": "VERIFIED_REAL_STEPS",
-        "run": "https://github.com/shrishmanglik/copilot-adoption-evidence-console/actions/runs/30703098170/job/91377424156",
+        "run": "https://github.com/shrishmanglik/copilot-adoption-evidence-console/actions/runs/30704093766/job/91380084902",
         "result": "SUCCESS",
-        "scope": "install, audit, secret scan, seven mutation kills, 40 tests, typecheck, lint, format, build, clean checkout, Chromium E2E"
+        "scope": "15 substantive steps: install, audit, secret scan, eight mutation kills with two restored passes, 47 tests, typecheck, lint, format, build, clean checkout, Chromium E2E"
       }
     },
     "provider": {
@@ -60,9 +60,14 @@
         "reviewedCommit": "be9d4f9ebda9cf6ed5bcce50b7ade28ca746cb9f",
         "verdict": "REVISE",
         "findingCount": 4
+      },
+      {
+        "reviewedCommit": "47e2121845779569d6e386751dd9aaec8b32d4c7",
+        "verdict": "REVISE",
+        "findingCount": 5
       }
     ],
-    "boundary": "Neither prior reviewer approved the build; all findings were remediated on new author commits and require a fresh distinct reviewer."
+    "boundary": "None of the three prior reviewers approved the build; all findings were remediated on new author commits and require a fresh distinct reviewer."
   },
   "correctedGaps": [
     "Original dispatch named a retired authority root; live canon resolved the current Tier 1 authority root before mutation",
