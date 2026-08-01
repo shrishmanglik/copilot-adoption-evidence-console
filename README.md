@@ -55,7 +55,7 @@ flowchart LR
 - UI: Next.js 16 App Router, React 19, TypeScript, Tailwind CSS v4, and shadcn-style local primitives.
 - Domain: typed adoption, validation, blocker, source, receipt, metric, clinic, and import contracts.
 - Service boundary: pure application services mediate between route handlers, rules, fixtures, and future adapters.
-- Persistence: the running demo is fixture-backed. A forward and rollback Supabase migration defines the production contract; every created table has RLS and a policy.
+- Persistence: the running demo is fixture-backed. A forward and rollback Supabase migration defines the production contract; every created table has RLS with role- and operation-specific policies. Viewers cannot write, consequential records are append-only, and approval policies bind a different requester to a signed-in role-specific approver.
 - Audit: state decisions identify the ruleset, reasons, held fields, sources, time, and human authority.
 
 See [architecture.md](./docs/architecture.md) for boundaries and failure semantics.
@@ -68,7 +68,7 @@ See [architecture.md](./docs/architecture.md) for boundaries and failure semanti
 | AI assistance          | Proposed only: summarization, clustering, question suggestions, and neutral follow-up drafts. There is no runtime AI call in this build.             |
 | Human authority        | Blocker cause, sentiment, accuracy, metric definition, product acceptance, customer validation, privacy, customer proof, and publication.            |
 
-The critical validator is mutation-tested. Disabling its stale-evidence detector must fail the negative assertion; restoring the detector must pass twice.
+Five critical detectors are mutation-tested without a runtime bypass: record integrity, current release, current usage, repeat-use evidence, and customer validation. Disabling each detector in the test harness must fail its bound negative assertion; restoring the exact source must pass twice.
 
 ## Implemented versus proposed
 
@@ -80,7 +80,8 @@ The critical validator is mutation-tested. Disabling its stale-evidence detector
 - Atomic import validation that retains the last accepted snapshot on rejection.
 - Clinic receipt API with validation, error/retry, undo, and explicit non-persistence.
 - Versioned export contract with sources, held fields, scope, generation time, and caveats.
-- Supabase forward/rollback schema with RLS coverage checks and append-only audit events.
+- Evidence-bound proof decisions computed from the same source records as adoption; no counter or proof gate is hard-coded.
+- Supabase forward/rollback schema with least-privilege RLS checks and append-only evidence, receipts, approvals, and audit events.
 - Unit/contract, mutation, type, lint, build, accessibility, E2E, and mobile overflow checks.
 
 ### Proposed, not claimed
@@ -127,15 +128,16 @@ npm test
 npm run typecheck
 npm run lint
 npm run build
+npm run verify:generated-clean
 npm run test:mutation
 npm run test:e2e
 ```
 
 Current local evidence at author handoff:
 
-- Unit/contract suite: 17/17 passed across 5 files.
-- Browser suite: 2/2 passed, including the primary clinic journey, serious/critical axe scan, and 390 px overflow check.
-- Mutation control: disabled detector failed; restored detector passed twice.
+- Unit/contract suite: 29/29 passed across 5 files.
+- Browser suite: 2/2 passed, including keyboard-contained evidence inspection, focus restoration, all four counter drill-downs, the clinic journey, serious/critical axe scan, and 390 px overflow check.
+- Mutation control: all 5 critical detectors failed their bound negative tests when disabled; restored source passed twice.
 - TypeScript, ESLint, Next.js production build, and dependency audit: passed.
 
 ## Recovery and operations

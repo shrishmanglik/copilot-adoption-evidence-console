@@ -1,24 +1,26 @@
-import { evaluateAdoption } from "@/lib/domain/adoption-engine";
+import {
+  evaluateAdoption,
+  evaluateProofEligibility,
+} from "@/lib/domain/adoption-engine";
 import { activationMetric, repeatUseMetric } from "@/lib/domain/metrics";
 import { workflowList } from "@/lib/fixtures/synthetic-data";
 
-export function listAdoptionRecords() {
-  return workflowList.map((workflow) => ({
+function assembleAdoptionRecord(workflow: (typeof workflowList)[number]) {
+  const receipt = evaluateAdoption(workflow);
+  return {
     workflow,
-    receipt: evaluateAdoption(workflow),
+    receipt,
+    proof: evaluateProofEligibility(workflow, receipt),
     activation: activationMetric(workflow),
     repeatUse: repeatUseMetric(workflow),
-  }));
+  };
+}
+
+export function listAdoptionRecords() {
+  return workflowList.map(assembleAdoptionRecord);
 }
 
 export function getAdoptionRecord(accountId: string) {
   const workflow = workflowList.find((item) => item.accountId === accountId);
-  return workflow
-    ? {
-        workflow,
-        receipt: evaluateAdoption(workflow),
-        activation: activationMetric(workflow),
-        repeatUse: repeatUseMetric(workflow),
-      }
-    : null;
+  return workflow ? assembleAdoptionRecord(workflow) : null;
 }

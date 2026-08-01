@@ -10,60 +10,99 @@ import {
   ShieldAlert,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ReturnTypeOfList } from "@/lib/view-types";
 import { formatDate, formatRate } from "@/lib/utils";
 import { StatusBadge } from "./status-badge";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "./ui/dialog";
+
+type CounterFilter =
+  | "ALL"
+  | "STALE_EVIDENCE"
+  | "PENDING_VALIDATION"
+  | "VERIFIED_ADOPTION"
+  | "PROOF_ELIGIBLE_HELD";
+
+function matchesCounter(
+  record: ReturnTypeOfList[number],
+  filter: CounterFilter,
+) {
+  if (filter === "ALL") return true;
+  if (filter === "STALE_EVIDENCE")
+    return record.receipt.heldFields.includes("current_usage_snapshot");
+  if (filter === "PENDING_VALIDATION")
+    return record.receipt.heldFields.includes("customer_validation");
+  if (filter === "VERIFIED_ADOPTION")
+    return record.receipt.state === "VERIFIED_ADOPTION";
+  return record.proof.status === "ELIGIBLE_HELD";
+}
 
 export function AdoptionDashboard({ records }: { records: ReturnTypeOfList }) {
   const [query, setQuery] = useState("");
   const [stateFilter, setStateFilter] = useState("ALL");
+  const [counterFilter, setCounterFilter] = useState<CounterFilter>("ALL");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const lastTriggerRef = useRef<HTMLButtonElement | null>(null);
   const selected = records.find((record) => record.workflow.id === selectedId);
   const filtered = useMemo(
     () =>
-      records.filter(({ workflow, receipt }) => {
+      records.filter((record) => {
+        const { workflow, receipt } = record;
         const matchesText =
           `${workflow.accountLabel} ${workflow.workflowLabel} ${workflow.segment}`
             .toLowerCase()
             .includes(query.toLowerCase());
         return (
           matchesText &&
-          (stateFilter === "ALL" || receipt.state === stateFilter)
+          (stateFilter === "ALL" || receipt.state === stateFilter) &&
+          matchesCounter(record, counterFilter)
         );
       }),
-    [query, records, stateFilter],
+    [counterFilter, query, records, stateFilter],
   );
 
   const cards = [
     {
+      id: "STALE_EVIDENCE" as const,
       label: "Stale evidence",
-      value: records.filter((r) =>
-        r.receipt.heldFields.includes("current_usage_snapshot"),
+      value: records.filter((record) =>
+        matchesCounter(record, "STALE_EVIDENCE"),
       ).length,
       note: "Current state held UNKNOWN",
       tone: "text-amber-700",
     },
     {
+      id: "PENDING_VALIDATION" as const,
       label: "Pending customer validation",
-      value: records.filter((r) =>
-        r.receipt.heldFields.includes("customer_validation"),
+      value: records.filter((record) =>
+        matchesCounter(record, "PENDING_VALIDATION"),
       ).length,
       note: "Internal resolution is insufficient",
       tone: "text-red-700",
     },
     {
+      id: "VERIFIED_ADOPTION" as const,
       label: "Verified adoption",
-      value: records.filter((r) => r.receipt.state === "VERIFIED_ADOPTION")
-        .length,
+      value: records.filter((record) =>
+        matchesCounter(record, "VERIFIED_ADOPTION"),
+      ).length,
       note: "Repeat use + current validation",
       tone: "text-teal-700",
     },
     {
+      id: "PROOF_ELIGIBLE_HELD" as const,
       label: "Proof eligible, held",
-      value: 1,
+      value: records.filter((record) =>
+        matchesCounter(record, "PROOF_ELIGIBLE_HELD"),
+      ).length,
       note: "Publication approvals incomplete",
       tone: "text-blue-700",
     },
@@ -76,7 +115,18 @@ export function AdoptionDashboard({ records }: { records: ReturnTypeOfList }) {
         aria-label="Adoption exception counters"
       >
         {cards.map((card) => (
-          <Card key={card.label} className="p-5">
+          <button
+            key={card.label}
+            type="button"
+            aria-pressed={counterFilter === card.id}
+            data-testid={`counter-${card.id.toLowerCase()}`}
+            onClick={() => {
+              setCounterFilter(counterFilter === card.id ? "ALL" : card.id);
+              setQuery("");
+              setStateFilter("ALL");
+            }}
+            className="rounded-xl border border-slate-200 bg-white p-5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-blue-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 aria-pressed:border-blue-600 aria-pressed:bg-blue-50"
+          >
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
               {card.label}
             </p>
@@ -84,7 +134,7 @@ export function AdoptionDashboard({ records }: { records: ReturnTypeOfList }) {
               {card.value}
             </p>
             <p className="mt-2 text-xs leading-5 text-slate-500">{card.note}</p>
-          </Card>
+          </button>
         ))}
       </section>
       <Card className="mt-5 overflow-hidden">
@@ -97,6 +147,14 @@ export function AdoptionDashboard({ records }: { records: ReturnTypeOfList }) {
               Every state opens its deterministic reasons and exact source
               records.
             </p>
+            {counterFilter !== "ALL" && (
+              <p
+                className="mt-2 text-xs font-semibold text-blue-700"
+                role="status"
+              >
+                Counter drill-down active: {counterFilter.replaceAll("_", " ")}
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <label className="relative">
@@ -197,7 +255,10 @@ export function AdoptionDashboard({ records }: { records: ReturnTypeOfList }) {
                   </td>
                   <td className="border-b border-slate-100 px-4 py-4">
                     <button
-                      onClick={() => setSelectedId(workflow.id)}
+                      onClick={(event) => {
+                        lastTriggerRef.current = event.currentTarget;
+                        setSelectedId(workflow.id);
+                      }}
                       className="inline-flex min-h-11 items-center gap-1 rounded-md px-2 font-semibold text-blue-700 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                     >
                       Inspect <ChevronRight size={16} />
@@ -219,6 +280,7 @@ export function AdoptionDashboard({ records }: { records: ReturnTypeOfList }) {
               onClick={() => {
                 setQuery("");
                 setStateFilter("ALL");
+                setCounterFilter("ALL");
               }}
             >
               Clear filters
@@ -226,35 +288,43 @@ export function AdoptionDashboard({ records }: { records: ReturnTypeOfList }) {
           </div>
         )}
       </Card>
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex justify-end bg-slate-950/35"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="evidence-title"
-        >
-          <button
-            className="absolute inset-0 cursor-default"
-            aria-label="Close evidence inspector"
-            onClick={() => setSelectedId(null)}
-          />
-          <aside className="relative h-full w-full max-w-xl overflow-y-auto bg-white p-6 shadow-2xl">
+      <Dialog
+        open={Boolean(selected)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedId(null);
+        }}
+      >
+        {selected && (
+          <DialogContent
+            aria-describedby="evidence-description"
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              lastTriggerRef.current?.focus();
+            }}
+          >
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">
                   Decision receipt
                 </p>
-                <h2 id="evidence-title" className="mt-2 text-2xl font-semibold">
+                <DialogTitle className="mt-2 text-2xl font-semibold">
                   Why this state?
-                </h2>
+                </DialogTitle>
+                <DialogDescription
+                  id="evidence-description"
+                  className="mt-2 text-sm text-slate-500"
+                >
+                  Exact rules, holds, human authority, and source records.
+                </DialogDescription>
               </div>
-              <button
-                onClick={() => setSelectedId(null)}
-                className="rounded-md p-2 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-600"
-                aria-label="Close"
-              >
-                <X />
-              </button>
+              <DialogClose asChild>
+                <button
+                  className="rounded-md p-2 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-600"
+                  aria-label="Close"
+                >
+                  <X />
+                </button>
+              </DialogClose>
             </div>
             <div className="mt-5">
               <StatusBadge state={selected.receipt.state} />
@@ -318,9 +388,9 @@ export function AdoptionDashboard({ records }: { records: ReturnTypeOfList }) {
                 Trace complete workflow <ArrowRight size={16} />
               </Link>
             </Button>
-          </aside>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
     </>
   );
 }

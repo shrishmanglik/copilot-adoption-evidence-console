@@ -14,7 +14,7 @@ jobs:
   pr-validation:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,11 +22,18 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm run scan:secrets
       - run: npm run test:mutation
       - run: npm test
       - run: npm run typecheck
       - run: npm run lint
+      - run: npm run format:check
       - run: npm run build
+      - name: Build leaves checkout clean
+        run: git diff --exit-code
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
 
   post-merge-smoke:
     if: github.event_name == 'push'

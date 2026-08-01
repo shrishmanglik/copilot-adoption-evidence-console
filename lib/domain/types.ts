@@ -37,6 +37,23 @@ export interface SourceRecord {
   kind: "CLINIC" | "USAGE_SNAPSHOT" | "RELEASE" | "VALIDATION" | "APPROVAL";
   version: string;
   observedAt: string;
+  periodId?: string;
+  usage?: {
+    eligibleUsers: number;
+    firstValueUsers: number;
+    repeatUsers: number;
+  };
+  validation?: {
+    state: ValidationState;
+    customerDisagrees: boolean;
+  };
+  approval?: {
+    type: "PRIVACY" | "WORDING" | "PUBLICATION";
+    state: "APPROVED" | "REJECTED" | "WITHDRAWN";
+    requestedByActorId: string;
+    approverActorId: string;
+    expiresAt?: string;
+  };
   synthetic: true;
 }
 
@@ -89,6 +106,28 @@ export interface DecisionReceipt {
   sourceRecordIds: string[];
   authority: string;
   rulesetVersion: "adoption-rules.v1";
+  synthetic: true;
+}
+
+export interface ProofGate {
+  id:
+    | "METRIC_SOURCE"
+    | "CURRENT_VERSION"
+    | "CUSTOMER_VALIDATION"
+    | "PRIVACY"
+    | "WORDING"
+    | "PUBLICATION";
+  label: string;
+  present: boolean;
+  sourceRecordIds: string[];
+}
+
+export interface ProofDecisionReceipt {
+  workflowId: string;
+  status: "NOT_ELIGIBLE" | "ELIGIBLE_HELD" | "ELIGIBLE";
+  gates: ProofGate[];
+  heldGateIds: ProofGate["id"][];
+  authority: "Named human approvers";
   synthetic: true;
 }
 

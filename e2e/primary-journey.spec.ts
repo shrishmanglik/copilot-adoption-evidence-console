@@ -14,18 +14,52 @@ test("operator traces adoption evidence and creates a held clinic receipt", asyn
     path: "public/adoption-dashboard.png",
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Inspect" }).first().click();
+  const firstInspector = page.getByRole("button", { name: "Inspect" }).first();
+  await firstInspector.focus();
+  await page.keyboard.press("Enter");
   await expect(
     page.getByRole("heading", { name: "Why this state?" }),
   ).toBeVisible();
   await expect(
     page.getByText("Usage evidence exceeds the 14-day freshness limit"),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Close", exact: true }).click();
-  await page.getByRole("link", { name: "Clinics" }).click();
-  await page
-    .getByRole("button", { name: "Generate follow-up receipt" })
-    .click();
+  const dialog = page.getByRole("dialog");
+  for (let index = 0; index < 8; index += 1) {
+    await page.keyboard.press("Tab");
+    expect(
+      await dialog.evaluate((element) =>
+        element.contains(document.activeElement),
+      ),
+    ).toBe(true);
+  }
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(firstInspector).toBeFocused();
+
+  for (const counter of [
+    "Stale evidence",
+    "Pending customer validation",
+    "Verified adoption",
+    "Proof eligible, held",
+  ]) {
+    const control = page.getByRole("button", {
+      name: new RegExp(counter, "i"),
+    });
+    await control.click();
+    await expect(control).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("tbody tr")).toHaveCount(1);
+    await control.click();
+    await expect(page.locator("tbody tr")).toHaveCount(3);
+  }
+
+  const clinicsLink = page.getByRole("link", { name: "Clinics" });
+  await clinicsLink.focus();
+  await page.keyboard.press("Enter");
+  const generateReceipt = page.getByRole("button", {
+    name: "Generate follow-up receipt",
+  });
+  await generateReceipt.focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByTestId("clinic-receipt")).toContainText(
     "Draft generated; no external send",
   );

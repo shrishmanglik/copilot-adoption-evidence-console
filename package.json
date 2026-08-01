@@ -14,9 +14,11 @@
     "test": "vitest run",
     "test:mutation": "node scripts/run-mutation-control.mjs",
     "test:e2e": "playwright test",
-    "test:quality": "npm run test && npm run typecheck && npm run lint && npm run build"
+    "test:quality": "npm run test && npm run typecheck && npm run lint && npm run build",
+    "verify:generated-clean": "git diff --exit-code -- next-env.d.ts tsconfig.json"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -2,17 +2,14 @@ import { Check, LockKeyhole, X } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { StatusBadge } from "@/components/status-badge";
 import { Card } from "@/components/ui/card";
+import { listAdoptionRecords } from "@/lib/services/adoption-service";
 
 export const metadata = { title: "Proof" };
 export default function ProofPage() {
-  const gates = [
-    { label: "Metric definition and source window", ok: true },
-    { label: "Current product version", ok: true },
-    { label: "Customer approval", ok: true },
-    { label: "Privacy review", ok: false },
-    { label: "Permitted wording", ok: false },
-    { label: "Publication channel authority", ok: false },
-  ];
+  const candidate = listAdoptionRecords().find(
+    (record) => record.proof.status === "ELIGIBLE_HELD",
+  );
+  if (!candidate) throw new Error("Synthetic proof candidate is unavailable");
   return (
     <>
       <ScreenHeader
@@ -34,21 +31,21 @@ export default function ProofPage() {
             <StatusBadge state="ELIGIBLE_HELD" />
           </div>
           <div className="mt-6 grid gap-3">
-            {gates.map((g) => (
+            {candidate.proof.gates.map((gate) => (
               <div
-                key={g.label}
+                key={gate.id}
                 className="flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 p-3"
               >
-                {g.ok ? (
+                {gate.present ? (
                   <Check className="text-teal-700" size={18} />
                 ) : (
                   <X className="text-red-700" size={18} />
                 )}
-                <span className="text-sm font-medium">{g.label}</span>
+                <span className="text-sm font-medium">{gate.label}</span>
                 <span
-                  className={`ml-auto text-xs font-bold ${g.ok ? "text-teal-700" : "text-red-700"}`}
+                  className={`ml-auto text-xs font-bold ${gate.present ? "text-teal-700" : "text-red-700"}`}
                 >
-                  {g.ok ? "PRESENT" : "HELD"}
+                  {gate.present ? "PRESENT" : "HELD"}
                 </span>
               </div>
             ))}

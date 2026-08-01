@@ -1,12 +1,40 @@
-import { mkdirSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 const vitest = resolve("node_modules/vitest/vitest.mjs");
-const target = "tests/adoption-engine.test.ts";
+const targetTest = "tests/adoption-engine.test.ts";
+const sourcePath = resolve("lib/domain/adoption-engine.ts");
 const logPath = resolve("evidence/qa/mutation-control.txt");
-const chunks = [];
 const repositoryRoot = process.cwd();
+const originalSource = readFileSync(sourcePath, "utf8");
+const chunks = [];
+
+const mutants = [
+  {
+    id: "RECORD_INTEGRITY",
+    expectedTest: "rejects an invalid or future source timestamp",
+  },
+  {
+    id: "CURRENT_RELEASE",
+    expectedTest:
+      "invalidates validation when the current product version changes",
+  },
+  {
+    id: "CURRENT_USAGE",
+    expectedTest: "holds stale critical evidence as UNKNOWN",
+  },
+  {
+    id: "REPEAT_USE",
+    expectedTest:
+      "rejects repeat-use periods that exceed distinct evidenced periods",
+  },
+  {
+    id: "CUSTOMER_VALIDATION",
+    expectedTest:
+      "invalidates validation when the current product version changes",
+  },
+];
 
 function sanitize(output) {
   return output
@@ -19,10 +47,10 @@ function sanitize(output) {
     .trimEnd();
 }
 
-function run(label, mutate) {
-  const result = spawnSync(process.execPath, [vitest, "run", target], {
+function run(label) {
+  const result = spawnSync(process.execPath, [vitest, "run", targetTest], {
     encoding: "utf8",
-    env: { ...process.env, DISABLE_CRITICAL_VALIDATOR: mutate ? "1" : "0" },
+    env: process.env,
   });
   chunks.push(
     sanitize(
@@ -32,29 +60,56 @@ function run(label, mutate) {
   return result;
 }
 
-const mutated = run("MUTATED_DETECTOR_DISABLED_EXPECT_FAIL", true);
-if (
-  mutated.status === 0 ||
-  !`${mutated.stdout}${mutated.stderr}`.includes(
-    "holds stale critical evidence as UNKNOWN",
-  )
-) {
+if (originalSource.includes("DISABLE_CRITICAL_VALIDATOR")) {
   throw new Error(
-    "Mutation control did not fail for the critical stale-evidence assertion",
+    "Runtime validator bypass must not exist in production source",
   );
 }
 
-for (const label of [
-  "RESTORED_RUN_1_EXPECT_PASS",
-  "RESTORED_RUN_2_EXPECT_PASS",
-]) {
-  const restored = run(label, false);
-  if (restored.status !== 0) throw new Error(`${label} failed`);
+try {
+  for (const mutant of mutants) {
+    const detectorPattern = new RegExp(
+      `\\.\\.\\.detect[A-Za-z]+\\(input\\), // MUTATION_POINT:${mutant.id}`,
+    );
+    const mutatedSource = originalSource.replace(
+      detectorPattern,
+      `...[], // MUTATION_POINT:${mutant.id}`,
+    );
+    if (mutatedSource === originalSource) {
+      throw new Error(`Mutation point ${mutant.id} was not found`);
+    }
+    writeFileSync(sourcePath, mutatedSource, "utf8");
+    const result = run(`MUTANT_${mutant.id}_EXPECT_FAIL`);
+    const output = `${result.stdout}${result.stderr}`;
+    if (result.status === 0 || !output.includes(mutant.expectedTest)) {
+      throw new Error(
+        `Mutation ${mutant.id} did not fail its bound negative assertion`,
+      );
+    }
+    writeFileSync(sourcePath, originalSource, "utf8");
+  }
+
+  for (const label of [
+    "RESTORED_RUN_1_EXPECT_PASS",
+    "RESTORED_RUN_2_EXPECT_PASS",
+  ]) {
+    writeFileSync(sourcePath, originalSource, "utf8");
+    const restored = run(label);
+    if (restored.status !== 0) throw new Error(`${label} failed`);
+  }
+} finally {
+  writeFileSync(sourcePath, originalSource, "utf8");
 }
 
-mkdirSync(dirname(logPath), { recursive: true });
-writeFileSync(logPath, `${chunks.join("\n\n").trimEnd()}\n`, "utf8");
+if (process.env.CI !== "true") {
+  mkdirSync(dirname(logPath), { recursive: true });
+  writeFileSync(logPath, `${chunks.join("\n\n").trimEnd()}\n`, "utf8");
+}
 console.log(
-  "Mutation control PASS: disabled detector failed; restored detector passed twice.",
+  `Mutation control PASS: ${mutants.length} detectors failed when disabled; restored source passed twice.`,
 );
-console.log(`Evidence: ${logPath}`);
+console.log(
+  process.env.CI === "true"
+    ? "Evidence log: console only in CI to preserve a clean checkout."
+    : `Evidence: ${logPath}`,
+);
