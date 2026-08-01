@@ -17,13 +17,17 @@
       ]
     },
     "github": {
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "claims": [
-        "Repository visibility, branch, commit, and PR are provider-verifiable after push"
+        "Repository is public",
+        "Named branch and implementation commit are pushed",
+        "Pull request is open against main"
       ],
       "repository": "https://github.com/shrishmanglik/copilot-adoption-evidence-console",
       "branch": "dev/copilot-adoption-evidence-console-initial-build",
-      "pullRequest": "PENDING"
+      "implementationCommit": "4b7a00dbf39c80173ab9105766b3d1770492960a",
+      "pullRequest": "https://github.com/shrishmanglik/copilot-adoption-evidence-console/pull/1",
+      "hostedChecks": "UNKNOWN_PENDING_PROVIDER_RUN"
     },
     "provider": {
       "status": "UNKNOWN",
