@@ -6,7 +6,7 @@ An adoption claim is valid only when the evidence chain is intact:
 
 `segment -> workflow -> baseline -> clinic -> blocker -> owner -> action -> customer validation -> repeat use -> playbook -> proof decision`
 
-The rules engine returns the highest fully evidenced state. Summary fields cannot promote a workflow by themselves: source IDs must be unique; timestamps must be valid and not in the future; current usage must match the product version, observation time, counts, and distinct repeat periods; and customer validation must match the current product version and validation record. Missing, stale, or mismatched critical evidence becomes `UNKNOWN`; it does not borrow confidence from adjacent telemetry.
+The rules engine returns the highest fully evidenced state. Summary fields cannot promote a workflow by themselves: baseline and enablement must match the workflow and eligible count; clinic first value must match workflow, timestamp, and product version; every blocker must match owner, state, closure condition, and owned action; current usage must match version, observation time, counts, and distinct periods; and customer validation must match the current product version and validation record. Removing or mismatching any required source regresses the state to `UNKNOWN`.
 
 ## Boundaries
 
@@ -25,7 +25,7 @@ Adoption can regress when evidence becomes stale, the product version changes, a
 
 ## Persistence posture
 
-The public build deliberately uses synthetic fixtures so it runs without credentials. `supabase/migrations/0001_adoption_evidence.sql` is a production persistence contract, not proof of a live database. It includes organization membership, customer accounts, workflow definitions, evidence, blockers, receipts, approvals, and audit events. Policies are role- and operation-specific; viewers are read-only; evidence, receipts, approvals, and audit events are append-only; and an approver must be the signed-in user, hold the approval-specific role, and differ from the requester.
+The public build deliberately uses synthetic fixtures so it runs without credentials. `supabase/migrations/0001_adoption_evidence.sql` is a production persistence contract, not proof of a live database. It includes organization membership, customer accounts, workflow definitions, evidence, blockers, receipts, approvals, and audit events. Child rows use composite organization/parent foreign keys so an operator cannot pass one tenant's RLS while referencing another tenant's parent. Policies are role- and operation-specific; viewers are read-only; evidence, receipts, approvals, and audit events are append-only; and an approver must be the signed-in user, hold the approval-specific role, and differ from the requester.
 
 ## AI boundary
 

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("operator traces adoption evidence and creates a held clinic receipt", async ({
+test("operator traces evidence and completes every held workflow by keyboard", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1600, height: 1000 });
@@ -52,6 +52,29 @@ test("operator traces adoption evidence and creates a held clinic receipt", asyn
     await expect(page.locator("tbody tr")).toHaveCount(3);
   }
 
+  const accountTrace = page.getByRole("link", {
+    name: "Synthetic executive cohort C",
+  });
+  await accountTrace.focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("heading", { name: "End-to-end evidence trace" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("src-clinic-303", { exact: true }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByText("src-blocker-303", { exact: true }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByText("src-playbook-303", { exact: true }).first(),
+  ).toBeVisible();
+  const backToRegister = page.getByRole("link", {
+    name: "Back to adoption register",
+  });
+  await backToRegister.focus();
+  await page.keyboard.press("Enter");
+
   const clinicsLink = page.getByRole("link", { name: "Clinics" });
   await clinicsLink.focus();
   await page.keyboard.press("Enter");
@@ -66,6 +89,40 @@ test("operator traces adoption evidence and creates a held clinic receipt", asyn
   await expect(page.getByTestId("clinic-receipt")).toContainText(
     "Held: facilitator review and customer confirmation",
   );
+
+  for (const workflow of [
+    {
+      link: "Blockers",
+      button: "Generate blocker action receipt",
+      testId: "blocker-action-receipt",
+      hold: "customer_retest",
+    },
+    {
+      link: "Validations",
+      button: "Generate validation receipt",
+      testId: "validation-receipt",
+      hold: "customer_signature",
+    },
+    {
+      link: "Playbooks",
+      button: "Generate playbook candidate receipt",
+      testId: "playbook-receipt",
+      hold: "second_account_evidence",
+    },
+  ]) {
+    const link = page.getByRole("link", { name: workflow.link });
+    await link.focus();
+    await page.keyboard.press("Enter");
+    const button = page.getByRole("button", { name: workflow.button });
+    await button.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByTestId(workflow.testId)).toContainText(
+      "Draft generated; no state change",
+    );
+    await expect(page.getByTestId(workflow.testId)).toContainText(
+      workflow.hold,
+    );
+  }
   const violations = await new AxeBuilder({ page }).analyze();
   expect(
     violations.violations.filter((item) =>

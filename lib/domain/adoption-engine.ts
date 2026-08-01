@@ -36,7 +36,8 @@ function currentVersionSources(
   kind: SourceRecord["kind"],
 ): SourceRecord[] {
   return input.sourceRecords.filter(
-    (source) => source.kind === kind && source.version === input.productVersion,
+    (source) =>
+      source.kind === kind && source.productVersion === input.productVersion,
   );
 }
 
@@ -71,6 +72,88 @@ function detectCurrentRelease(input: WorkflowEvidence): EvidenceIssue[] {
       reason: "No release record matches the current product version",
     },
   ];
+}
+
+function detectFoundationChain(input: WorkflowEvidence): EvidenceIssue[] {
+  const issues: EvidenceIssue[] = [];
+  const baseline = input.sourceRecords.find(
+    (source) =>
+      source.kind === "BASELINE" &&
+      source.baseline?.workflowId === input.id &&
+      source.baseline?.eligibleUsers === input.eligibleUsers,
+  );
+  if (!baseline) {
+    issues.push({
+      field: "baseline_source",
+      reason:
+        "Workflow eligibility is not backed by a matching baseline record",
+    });
+  }
+  if (input.enabledAt) {
+    const enablement = currentVersionSources(input, "ENABLEMENT").find(
+      (source) =>
+        source.enablement?.workflowId === input.id &&
+        sameInstant(source.observedAt, input.enabledAt),
+    );
+    if (!enablement) {
+      issues.push({
+        field: "enablement_source",
+        reason:
+          "Enablement timestamp is not backed by a matching current-version record",
+      });
+    }
+  }
+  if (input.firstValueAt) {
+    const clinic = currentVersionSources(input, "CLINIC").find(
+      (source) =>
+        sameInstant(source.observedAt, input.firstValueAt) &&
+        source.clinic?.workflowId === input.id &&
+        source.clinic.outcome === "FIRST_VALUE",
+    );
+    if (!clinic) {
+      issues.push({
+        field: "clinic_first_value_source",
+        reason:
+          "First value is not backed by a matching current-version clinic record",
+      });
+    }
+  }
+  return issues;
+}
+
+function detectBlockerActionChain(input: WorkflowEvidence): EvidenceIssue[] {
+  const issues: EvidenceIssue[] = [];
+  for (const blocker of input.blockers) {
+    const blockerRecord = currentVersionSources(input, "BLOCKER").find(
+      (source) =>
+        source.blocker?.blockerId === blocker.id &&
+        source.blocker.state === blocker.state &&
+        source.blocker.ownerRole === blocker.ownerRole &&
+        source.blocker.closureCondition === blocker.closureCondition,
+    );
+    if (!blockerRecord) {
+      issues.push({
+        field: `blocker_source:${blocker.id}`,
+        reason: `Blocker ${blocker.id} is not backed by a matching current-version record`,
+      });
+    }
+    const actionRecord = currentVersionSources(input, "ACTION").find(
+      (source) =>
+        source.action?.blockerId === blocker.id &&
+        source.action.ownerRole === blocker.ownerRole &&
+        source.action.description === input.nextIntervention &&
+        (blocker.state === "OPEN"
+          ? source.action.status === "PLANNED"
+          : source.action.status === "IMPLEMENTED"),
+    );
+    if (!actionRecord) {
+      issues.push({
+        field: `action_source:${blocker.id}`,
+        reason: `Blocker ${blocker.id} has no matching owned action record`,
+      });
+    }
+  }
+  return issues;
 }
 
 function detectCurrentUsage(input: WorkflowEvidence): EvidenceIssue[] {
@@ -174,6 +257,8 @@ export function evaluateAdoption(input: WorkflowEvidence): DecisionReceipt {
 
   const evidenceIssues = [
     ...detectRecordIntegrity(input), // MUTATION_POINT:RECORD_INTEGRITY
+    ...detectFoundationChain(input), // MUTATION_POINT:FOUNDATION_CHAIN
+    ...detectBlockerActionChain(input), // MUTATION_POINT:BLOCKER_ACTION
     ...detectCurrentRelease(input), // MUTATION_POINT:CURRENT_RELEASE
     ...detectCurrentUsage(input), // MUTATION_POINT:CURRENT_USAGE
     ...detectRepeatUse(input), // MUTATION_POINT:REPEAT_USE
@@ -249,6 +334,11 @@ export function evaluateProofEligibility(
   const validation = currentVersionSources(input, "VALIDATION").filter(
     (source) => source.validation?.state === "APPROVED",
   );
+  const playbooks = currentVersionSources(input, "PLAYBOOK").filter(
+    (source) =>
+      source.playbook?.sourceWorkflowId === input.id &&
+      source.playbook.status === "CANDIDATE_HUMAN_REVIEW",
+  );
   const approvals = (
     approvalType: NonNullable<SourceRecord["approval"]>["type"],
   ) =>
@@ -281,6 +371,12 @@ export function evaluateProofEligibility(
       label: "Customer approval",
       present: validation.length > 0,
       sourceRecordIds: validation.map((source) => source.id),
+    },
+    {
+      id: "PLAYBOOK_SOURCE",
+      label: "Playbook candidate source",
+      present: playbooks.length > 0,
+      sourceRecordIds: playbooks.map((source) => source.id),
     },
     ...(["PRIVACY", "WORDING", "PUBLICATION"] as const).map(
       (approvalType): ProofGate => {

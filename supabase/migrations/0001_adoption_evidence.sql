@@ -38,38 +38,42 @@ create table public.customer_accounts (
   sensitivity text not null default 'restricted',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (organization_id, external_reference)
+  unique (organization_id, external_reference),
+  unique (organization_id, id)
 );
 
 create table public.workflow_definitions (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
-  account_id uuid not null references public.customer_accounts(id) on delete cascade,
+  account_id uuid not null,
   name text not null,
   owner_user_id uuid references auth.users(id),
   product_version text not null,
   repeat_rule_periods integer not null check (repeat_rule_periods >= 2),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (organization_id, id),
+  foreign key (organization_id, account_id) references public.customer_accounts(organization_id, id) on delete cascade
 );
 
 create table public.evidence_records (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
-  workflow_id uuid not null references public.workflow_definitions(id) on delete cascade,
+  workflow_id uuid not null,
   source_kind text not null,
   source_version text not null,
   observed_at timestamptz not null,
   payload jsonb not null,
   sensitivity text not null default 'restricted',
   created_by uuid not null references auth.users(id),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  foreign key (organization_id, workflow_id) references public.workflow_definitions(organization_id, id) on delete cascade
 );
 
 create table public.blockers (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
-  workflow_id uuid not null references public.workflow_definitions(id) on delete cascade,
+  workflow_id uuid not null,
   category text not null,
   severity text not null check (severity in ('LOW','MEDIUM','HIGH','CRITICAL')),
   state text not null,
@@ -77,13 +81,14 @@ create table public.blockers (
   closure_condition text not null,
   due_at timestamptz,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  foreign key (organization_id, workflow_id) references public.workflow_definitions(organization_id, id) on delete cascade
 );
 
 create table public.adoption_receipts (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
-  workflow_id uuid not null references public.workflow_definitions(id) on delete cascade,
+  workflow_id uuid not null,
   ruleset_version text not null,
   state text not null,
   reasons jsonb not null,
@@ -91,12 +96,14 @@ create table public.adoption_receipts (
   source_record_ids jsonb not null,
   evaluated_at timestamptz not null,
   created_by uuid not null references auth.users(id) default auth.uid(),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  foreign key (organization_id, workflow_id) references public.workflow_definitions(organization_id, id) on delete cascade
 );
 
 create table public.approvals (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
+  workflow_id uuid not null,
   subject_type text not null,
   subject_id uuid not null,
   approval_type text not null check (approval_type in ('CUSTOMER','METRIC','PRIVACY','WORDING','PUBLICATION')),
@@ -106,18 +113,21 @@ create table public.approvals (
   wording_scope text,
   expires_at timestamptz,
   created_at timestamptz not null default now(),
-  check (requested_by_user_id <> approver_user_id)
+  check (requested_by_user_id <> approver_user_id),
+  foreign key (organization_id, workflow_id) references public.workflow_definitions(organization_id, id) on delete cascade
 );
 
 create table public.audit_events (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
+  workflow_id uuid not null,
   actor_user_id uuid references auth.users(id),
   event_type text not null,
   subject_type text not null,
   subject_id uuid not null,
   event_payload jsonb not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  foreign key (organization_id, workflow_id) references public.workflow_definitions(organization_id, id) on delete cascade
 );
 
 alter table public.organizations enable row level security;

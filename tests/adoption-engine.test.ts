@@ -3,6 +3,7 @@ import {
   evaluateAdoption,
   evaluateProofEligibility,
 } from "@/lib/domain/adoption-engine";
+import { buildEvidenceTrace } from "@/lib/domain/evidence-trace";
 import { syntheticWorkflows } from "@/lib/fixtures/synthetic-data";
 
 describe("critical adoption validator", () => {
@@ -48,7 +49,7 @@ describe("critical adoption validator", () => {
       (source) => source.observedAt === input.usageSnapshotAt,
     );
     if (!current) throw new Error("fixture must include current usage source");
-    current.version = "2026.6";
+    current.productVersion = "2026.6";
     const result = evaluateAdoption(input);
     expect(result.state).toBe("UNKNOWN");
     expect(result.heldFields).toContain("current_usage_snapshot");
@@ -69,6 +70,44 @@ describe("critical adoption validator", () => {
     expect(result.state).toBe("UNKNOWN");
     expect(result.heldFields).toContain("current_product_release");
     expect(result.heldFields).toContain("current_product_version_validation");
+  });
+
+  it("invalidates adoption when the baseline source is removed", () => {
+    const input = structuredClone(syntheticWorkflows.verified);
+    input.sourceRecords = input.sourceRecords.filter(
+      (source) => source.kind !== "BASELINE",
+    );
+    const result = evaluateAdoption(input);
+    expect(result.state).toBe("UNKNOWN");
+    expect(result.heldFields).toContain("baseline_source");
+  });
+
+  it("invalidates adoption when the clinic first-value source is removed", () => {
+    const input = structuredClone(syntheticWorkflows.verified);
+    input.sourceRecords = input.sourceRecords.filter(
+      (source) => source.kind !== "CLINIC",
+    );
+    const result = evaluateAdoption(input);
+    expect(result.state).toBe("UNKNOWN");
+    expect(result.heldFields).toContain("clinic_first_value_source");
+  });
+
+  it("invalidates adoption when blocker or action sources are removed", () => {
+    for (const missingKind of ["BLOCKER", "ACTION"] as const) {
+      const input = structuredClone(syntheticWorkflows.verified);
+      input.sourceRecords = input.sourceRecords.filter(
+        (source) => source.kind !== missingKind,
+      );
+      const result = evaluateAdoption(input);
+      expect(result.state).toBe("UNKNOWN");
+      expect(
+        result.heldFields.some((field) =>
+          field.startsWith(
+            missingKind === "BLOCKER" ? "blocker_source" : "action_source",
+          ),
+        ),
+      ).toBe(true);
+    }
   });
 
   it("keeps proof held until each named approval source exists", () => {
@@ -123,5 +162,22 @@ describe("critical adoption validator", () => {
     const proof = evaluateProofEligibility(input, evaluateAdoption(input));
     expect(proof.status).toBe("ELIGIBLE_HELD");
     expect(proof.heldGateIds).toContain("PRIVACY");
+  });
+
+  it("builds every trace stage from exact IDs rather than array position", () => {
+    const input = structuredClone(syntheticWorkflows.verified);
+    input.sourceRecords.reverse();
+    const adoption = evaluateAdoption(input);
+    const proof = evaluateProofEligibility(input, adoption);
+    const trace = buildEvidenceTrace(input, adoption, proof);
+    expect(
+      trace.find((stage) => stage.id === "CLINIC_FIRST_VALUE")?.evidenceIds,
+    ).toEqual(["src-clinic-303"]);
+    expect(trace.find((stage) => stage.id === "BLOCKER")?.evidenceIds).toEqual([
+      "src-blocker-303",
+    ]);
+    expect(trace.find((stage) => stage.id === "PLAYBOOK")?.evidenceIds).toEqual(
+      ["src-playbook-303"],
+    );
   });
 });

@@ -1,4 +1,5 @@
 import { ScreenHeader } from "@/components/screen-header";
+import { GovernedWorkflowWorkspace } from "@/components/governed-workflow-workspace";
 import { StatusBadge } from "@/components/status-badge";
 import { Card } from "@/components/ui/card";
 import { workflowList } from "@/lib/fixtures/synthetic-data";
@@ -79,6 +80,22 @@ export default function BlockersPage() {
           </table>
         </div>
       </Card>
+      <GovernedWorkflowWorkspace
+        kind="BLOCKER_ACTION"
+        heading="Draft an owned blocker action"
+        description="Bind the action to the affected workflow and current product version. Closure remains customer-held."
+        buttonLabel="Generate blocker action receipt"
+        testId="blocker-action-receipt"
+        initial={{
+          workflowId: "wf-report-accuracy",
+          evidenceSummary:
+            "Narrative labels were corrected on the current product version; customer retest remains pending.",
+          ownerAction:
+            "Engineering owner preserves the release record and supports the scheduled customer retest.",
+          stopCondition:
+            "Reopen the blocker if labels differ from the reviewed release or the customer disputes accuracy.",
+        }}
+      />
     </>
   );
 }

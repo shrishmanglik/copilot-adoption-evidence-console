@@ -15,3 +15,13 @@ export const clinicReceiptInputSchema = z.object({
 });
 
 export type ClinicReceiptPayload = z.infer<typeof clinicReceiptInputSchema>;
+
+export const governedWorkflowReceiptInputSchema = z.object({
+  kind: z.enum(["BLOCKER_ACTION", "CUSTOMER_VALIDATION", "PLAYBOOK_CANDIDATE"]),
+  workflowId: z.string().min(1).max(80),
+  productVersion: z.string().min(1).max(80),
+  evidenceSummary: z.string().min(12).max(1000),
+  ownerAction: z.string().min(12).max(500),
+  stopCondition: z.string().min(12).max(500),
+  humanReviewAcknowledged: z.literal(true),
+});

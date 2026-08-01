@@ -20,7 +20,9 @@ No environment file is required for the fixture-backed build. `/api/health` repo
 2. Trace the source records before accepting the displayed state.
 3. Open Clinics, record the observed and expected behavior, assign both sides' actions, and set a retest date.
 4. Generate the draft receipt. Confirm it says `DRAFT_NOT_PERSISTED` and lists both human holds.
-5. Route the receipt to the facilitator and customer champion; the application does not send it.
+5. Use Blockers, Validations, and Playbooks to generate each governed draft receipt by keyboard.
+6. Confirm every receipt says `externalAction: NONE`, exposes its holds, and supports retry or undo.
+7. Route reviewed evidence to the named human authority outside this demo; the application does not send it.
 
 ## Recovery
 

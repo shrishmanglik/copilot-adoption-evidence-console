@@ -34,9 +34,40 @@ export type BlockerCategory =
 
 export interface SourceRecord {
   id: string;
-  kind: "CLINIC" | "USAGE_SNAPSHOT" | "RELEASE" | "VALIDATION" | "APPROVAL";
+  kind:
+    | "BASELINE"
+    | "ENABLEMENT"
+    | "CLINIC"
+    | "BLOCKER"
+    | "ACTION"
+    | "USAGE_SNAPSHOT"
+    | "RELEASE"
+    | "VALIDATION"
+    | "PLAYBOOK"
+    | "APPROVAL";
   version: string;
+  productVersion?: string;
   observedAt: string;
+  baseline?: { workflowId: string; eligibleUsers: number };
+  enablement?: { workflowId: string };
+  clinic?: { workflowId: string; outcome: "FIRST_VALUE" };
+  blocker?: {
+    blockerId: string;
+    state: BlockerState;
+    ownerRole: string;
+    closureCondition: string;
+  };
+  action?: {
+    blockerId: string;
+    status: "PLANNED" | "IMPLEMENTED";
+    ownerRole: string;
+    description: string;
+  };
+  playbook?: {
+    sourceWorkflowId: string;
+    status: "CANDIDATE_HUMAN_REVIEW" | "APPROVED";
+    sourceAccountCount: number;
+  };
   periodId?: string;
   usage?: {
     eligibleUsers: number;
@@ -114,12 +145,30 @@ export interface ProofGate {
     | "METRIC_SOURCE"
     | "CURRENT_VERSION"
     | "CUSTOMER_VALIDATION"
+    | "PLAYBOOK_SOURCE"
     | "PRIVACY"
     | "WORDING"
     | "PUBLICATION";
   label: string;
   present: boolean;
   sourceRecordIds: string[];
+}
+
+export interface EvidenceTraceStage {
+  id:
+    | "BASELINE"
+    | "ENABLEMENT_RELEASE"
+    | "CLINIC_FIRST_VALUE"
+    | "BLOCKER"
+    | "ACTION"
+    | "CUSTOMER_VALIDATION"
+    | "REPEAT_USE"
+    | "PLAYBOOK"
+    | "PROOF";
+  label: string;
+  status: "COMPLETE" | "HELD" | "MISSING";
+  evidenceIds: string[];
+  detail: string;
 }
 
 export interface ProofDecisionReceipt {
@@ -161,4 +210,27 @@ export interface ClinicReceipt extends ClinicReceiptInput {
   status: "DRAFT_NOT_PERSISTED";
   heldFields: string[];
   humanApprovalRequired: true;
+}
+
+export type GovernedWorkflowKind =
+  "BLOCKER_ACTION" | "CUSTOMER_VALIDATION" | "PLAYBOOK_CANDIDATE";
+
+export interface GovernedWorkflowReceiptInput {
+  kind: GovernedWorkflowKind;
+  workflowId: string;
+  productVersion: string;
+  evidenceSummary: string;
+  ownerAction: string;
+  stopCondition: string;
+  humanReviewAcknowledged: true;
+}
+
+export interface GovernedWorkflowReceipt extends GovernedWorkflowReceiptInput {
+  receiptId: string;
+  generatedAt: string;
+  status: "DRAFT_NOT_PERSISTED";
+  heldFields: string[];
+  humanApprovalRequired: true;
+  externalAction: "NONE";
+  synthetic: true;
 }

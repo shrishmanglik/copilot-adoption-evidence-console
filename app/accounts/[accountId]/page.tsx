@@ -22,17 +22,7 @@ export default async function AccountPage({
 }) {
   const record = getAdoptionRecord((await params).accountId);
   if (!record) notFound();
-  const { workflow, receipt, activation, repeatUse } = record;
-  const stages = [
-    "Eligible workflow defined",
-    "Clinic observed",
-    "First value confirmed",
-    "Blocker owned",
-    "Action/release linked",
-    "Customer validation",
-    "Repeat use evaluated",
-    "Proof decision held",
-  ];
+  const { workflow, receipt, activation, repeatUse, trace } = record;
   return (
     <>
       <Link
@@ -114,28 +104,35 @@ export default async function AccountPage({
             </span>
           </div>
           <ol className="mt-7 grid gap-0">
-            {stages.map((stage, index) => {
-              const held =
-                index === 7 ||
-                (receipt.state !== "VERIFIED_ADOPTION" && index >= 5);
+            {trace.map((stage, index) => {
               return (
-                <li key={stage} className="grid grid-cols-[28px_1fr] gap-3">
+                <li key={stage.id} className="grid grid-cols-[28px_1fr] gap-3">
                   <div className="flex flex-col items-center">
-                    {held ? (
+                    {stage.status === "HELD" ? (
                       <Circle className="text-amber-500" size={18} />
+                    ) : stage.status === "MISSING" ? (
+                      <ShieldAlert className="text-red-600" size={18} />
                     ) : (
                       <CheckCircle2 className="text-teal-600" size={18} />
                     )}
-                    {index < stages.length - 1 && (
+                    {index < trace.length - 1 && (
                       <span className="h-10 w-px bg-slate-200" />
                     )}
                   </div>
                   <div className="pb-5">
-                    <p className="font-semibold">{stage}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold">{stage.label}</p>
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                        {stage.status}
+                      </span>
+                    </div>
                     <p className="mt-1 text-xs leading-5 text-slate-500">
-                      {held
-                        ? "Held pending explicit evidence or human authority"
-                        : `Bound to ${workflow.sourceRecords[Math.min(index, workflow.sourceRecords.length - 1)]?.id ?? "deterministic record"}`}
+                      {stage.detail}
+                    </p>
+                    <p className="mt-1 break-all font-mono text-[11px] text-blue-700">
+                      {stage.evidenceIds.length > 0
+                        ? stage.evidenceIds.join(" · ")
+                        : "NO MATCHING SOURCE RECORD"}
                     </p>
                   </div>
                 </li>
@@ -194,7 +191,10 @@ export default async function AccountPage({
                 <div>
                   <p className="font-mono text-xs font-semibold">{source.id}</p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {source.kind} · version {source.version}
+                    {source.kind} · contract {source.version}
+                    {source.productVersion
+                      ? ` · product ${source.productVersion}`
+                      : ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500">

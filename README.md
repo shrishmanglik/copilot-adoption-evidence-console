@@ -29,12 +29,15 @@ No role may self-approve high-risk accuracy, privacy, adoption, or customer-proo
 1. Open the adoption register and inspect a deterministic decision receipt.
 2. Trace one synthetic workflow through its exact source records and blocker contract.
 3. Run a clinic and generate a plain-language follow-up receipt.
-4. Observe that the draft remains non-persisted and human-held.
-5. Inspect metric numerators, denominators, rules, windows, and exclusions.
-6. Review proof eligibility separately from publication authority.
-7. Export a versioned JSON receipt with sources, held fields, scope, and caveats.
+4. Draft blocker-action, customer-validation, and playbook-candidate receipts through keyboard-operable workflows.
+5. Observe that every draft remains non-persisted, non-sending, and human-held.
+6. Inspect metric numerators, denominators, rules, windows, and exclusions.
+7. Review proof eligibility separately from publication authority.
+8. Export a versioned JSON receipt with sources, held fields, scope, and caveats.
 
 The E2E test executes this journey in Chromium and also checks the 390 px layout for page overflow.
+
+![Keyboard-operable synthetic playbook candidate receipt](./public/recruiter-console.png)
 
 ## Architecture
 
@@ -53,9 +56,9 @@ flowchart LR
 ```
 
 - UI: Next.js 16 App Router, React 19, TypeScript, Tailwind CSS v4, and shadcn-style local primitives.
-- Domain: typed adoption, validation, blocker, source, receipt, metric, clinic, and import contracts.
+- Domain: typed baseline, enablement, clinic, blocker, action, release, usage, validation, playbook, approval, receipt, metric, and import contracts.
 - Service boundary: pure application services mediate between route handlers, rules, fixtures, and future adapters.
-- Persistence: the running demo is fixture-backed. A forward and rollback Supabase migration defines the production contract; every created table has RLS with role- and operation-specific policies. Viewers cannot write, consequential records are append-only, and approval policies bind a different requester to a signed-in role-specific approver.
+- Persistence: the running demo is fixture-backed. A forward and rollback Supabase migration defines the production contract; every created table has RLS with role- and operation-specific policies. Composite `(organization_id, parent_id)` foreign keys prevent cross-tenant parent references. Viewers cannot write, consequential records are append-only, and approval policies bind a different requester to a signed-in role-specific approver.
 - Audit: state decisions identify the ruleset, reasons, held fields, sources, time, and human authority.
 
 See [architecture.md](./docs/architecture.md) for boundaries and failure semantics.
@@ -68,20 +71,22 @@ See [architecture.md](./docs/architecture.md) for boundaries and failure semanti
 | AI assistance          | Proposed only: summarization, clustering, question suggestions, and neutral follow-up drafts. There is no runtime AI call in this build.             |
 | Human authority        | Blocker cause, sentiment, accuracy, metric definition, product acceptance, customer validation, privacy, customer proof, and publication.            |
 
-Five critical detectors are mutation-tested without a runtime bypass: record integrity, current release, current usage, repeat-use evidence, and customer validation. Disabling each detector in the test harness must fail its bound negative assertion; restoring the exact source must pass twice.
+Seven critical detectors are mutation-tested without a runtime bypass: record integrity, foundation chain, blocker/action chain, current release, current usage, repeat-use evidence, and customer validation. Disabling each detector in the test harness must fail its bound negative assertion; restoring the exact source must pass twice.
 
 ## Implemented versus proposed
 
 ### Implemented
 
-- Responsive adoption, account, clinic, blocker, experiment, playbook, proof, and audit surfaces.
-- Deterministic adoption state engine with evidence receipts and regression paths.
+- Responsive adoption, account, clinic, blocker, validation, experiment, playbook, proof, and audit surfaces.
+- Deterministic adoption state engine with deletion-sensitive source-chain receipts and regression paths.
 - Metric receipts exposing definition, source window, numerator, denominator, and exclusions.
 - Atomic import validation that retains the last accepted snapshot on rejection.
 - Clinic receipt API with validation, error/retry, undo, and explicit non-persistence.
+- Governed blocker-action, customer-validation, and playbook-candidate receipt API with validation, retry, undo, human holds, and no external action.
 - Versioned export contract with sources, held fields, scope, generation time, and caveats.
 - Evidence-bound proof decisions computed from the same source records as adoption; no counter or proof gate is hard-coded.
 - Supabase forward/rollback schema with least-privilege RLS checks and append-only evidence, receipts, approvals, and audit events.
+- Repository-enforced LF checkout via `.gitattributes` for Windows/Linux format reproducibility.
 - Unit/contract, mutation, type, lint, build, accessibility, E2E, and mobile overflow checks.
 
 ### Proposed, not claimed
@@ -135,9 +140,9 @@ npm run test:e2e
 
 Current local evidence at author handoff:
 
-- Unit/contract suite: 29/29 passed across 5 files.
-- Browser suite: 2/2 passed, including keyboard-contained evidence inspection, focus restoration, all four counter drill-downs, the clinic journey, serious/critical axe scan, and 390 px overflow check.
-- Mutation control: all 5 critical detectors failed their bound negative tests when disabled; restored source passed twice.
+- Unit/contract suite: 40/40 passed across 7 files.
+- Browser suite: 2/2 passed, including keyboard-contained evidence inspection, focus restoration, all four counter drill-downs, clinic, blocker, validation, and playbook workflows, serious/critical axe scan, and 390 px overflow check.
+- Mutation control: all 7 critical detectors failed their bound negative tests when disabled; restored source passed twice.
 - TypeScript, ESLint, Next.js production build, and dependency audit: passed.
 
 ## Recovery and operations

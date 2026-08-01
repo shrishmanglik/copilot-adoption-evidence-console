@@ -8,6 +8,7 @@
 - Atomic import rejection and last-accepted-snapshot recovery.
 - Tenant key on every persistence table.
 - RLS enabled on every table with role- and operation-specific policies; the viewer role has no write path.
+- Composite organization/account and organization/workflow foreign keys reject cross-tenant parent references before RLS policy success can create an inconsistent child.
 - Evidence, adoption receipts, approvals, and audit events are append-only in the persistence contract.
 - Approval inserts require the signed-in approver, an approval-specific role, and a different requester.
 - Export payload declares versions, generation time, scope, held fields, and caveats.

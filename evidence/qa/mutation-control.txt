@@ -3,24 +3,28 @@ exit=1
 
  RUN  v3.2.7 <repo>
 
-  tests/adoption-engine.test.ts (11 tests | 1 failed) 25ms
-    critical adoption validator > holds stale critical evidence as UNKNOWN 3ms
-    critical adoption validator > does not treat internal resolution as customer-validated closure 1ms
+  tests/adoption-engine.test.ts (15 tests | 1 failed) 14ms
+    critical adoption validator > holds stale critical evidence as UNKNOWN 2ms
+    critical adoption validator > does not treat internal resolution as customer-validated closure 0ms
     critical adoption validator > allows verified adoption only with repeat use and current human validation 0ms
-    critical adoption validator > fails closed when summary fields have no source records 1ms
-    critical adoption validator > rejects an invalid or future source timestamp 14ms
+    critical adoption validator > fails closed when summary fields have no source records 0ms
+    critical adoption validator > rejects an invalid or future source timestamp 7ms
       expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equality
-    critical adoption validator > rejects a usage summary that does not match its source version and counts 1ms
-    critical adoption validator > rejects repeat-use periods that exceed distinct evidenced periods 1ms
-    critical adoption validator > invalidates validation when the current product version changes 1ms
+    critical adoption validator > rejects a usage summary that does not match its source version and counts 0ms
+    critical adoption validator > rejects repeat-use periods that exceed distinct evidenced periods 0ms
+    critical adoption validator > invalidates validation when the current product version changes 0ms
+    critical adoption validator > invalidates adoption when the baseline source is removed 0ms
+    critical adoption validator > invalidates adoption when the clinic first-value source is removed 0ms
+    critical adoption validator > invalidates adoption when blocker or action sources are removed 0ms
     critical adoption validator > keeps proof held until each named approval source exists 1ms
-    critical adoption validator > makes proof eligible only from exact approval records 1ms
-    critical adoption validator > rejects expired or self-approved proof records 1ms
+    critical adoption validator > makes proof eligible only from exact approval records 0ms
+    critical adoption validator > rejects expired or self-approved proof records 0ms
+    critical adoption validator > builds every trace stage from exact IDs rather than array position 1ms
 
  Test Files  1 failed (1)
-      Tests  1 failed | 10 passed (11)
-   Start at  09:29:24
-   Duration  1.09s (transform 152ms, setup 0ms, collect 143ms, tests 25ms, environment 0ms, prepare 359ms)
+      Tests  1 failed | 14 passed (15)
+   Start at  09:59:11
+   Duration  601ms (transform 61ms, setup 0ms, collect 79ms, tests 14ms, environment 0ms, prepare 95ms)
 
 
 
@@ -32,13 +36,126 @@ AssertionError: expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equali
 Expected: "UNKNOWN"
 Received: "VERIFIED_ADOPTION"
 
-  tests/adoption-engine.test.ts:41:26
-     39|     input.sourceRecords[0].observedAt = "2099-01-01T00:00:00.000Z";
-     40|     const result = evaluateAdoption(input);
-     41|     expect(result.state).toBe("UNKNOWN");
+  tests/adoption-engine.test.ts:42:26
+     40|     input.sourceRecords[0].observedAt = "2099-01-01T00:00:00.000Z";
+     41|     const result = evaluateAdoption(input);
+     42|     expect(result.state).toBe("UNKNOWN");
        |                          ^
-     42|     expect(result.heldFields).toContain("valid_source_timestamps");
-     43|   });
+     43|     expect(result.heldFields).toContain("valid_source_timestamps");
+     44|   });
+
+[1/1]
+
+=== MUTANT_FOUNDATION_CHAIN_EXPECT_FAIL ===
+exit=1
+
+ RUN  v3.2.7 <repo>
+
+  tests/adoption-engine.test.ts (15 tests | 2 failed) 14ms
+    critical adoption validator > holds stale critical evidence as UNKNOWN 2ms
+    critical adoption validator > does not treat internal resolution as customer-validated closure 0ms
+    critical adoption validator > allows verified adoption only with repeat use and current human validation 0ms
+    critical adoption validator > fails closed when summary fields have no source records 0ms
+    critical adoption validator > rejects an invalid or future source timestamp 0ms
+    critical adoption validator > rejects a usage summary that does not match its source version and counts 0ms
+    critical adoption validator > rejects repeat-use periods that exceed distinct evidenced periods 0ms
+    critical adoption validator > invalidates validation when the current product version changes 0ms
+    critical adoption validator > invalidates adoption when the baseline source is removed 6ms
+      expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equality
+    critical adoption validator > invalidates adoption when the clinic first-value source is removed 1ms
+      expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equality
+    critical adoption validator > invalidates adoption when blocker or action sources are removed 1ms
+    critical adoption validator > keeps proof held until each named approval source exists 1ms
+    critical adoption validator > makes proof eligible only from exact approval records 0ms
+    critical adoption validator > rejects expired or self-approved proof records 0ms
+    critical adoption validator > builds every trace stage from exact IDs rather than array position 0ms
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 13 passed (15)
+   Start at  09:59:12
+   Duration  518ms (transform 58ms, setup 0ms, collect 82ms, tests 14ms, environment 0ms, prepare 145ms)
+
+
+
+ Failed Tests 2
+
+ FAIL  tests/adoption-engine.test.ts > critical adoption validator > invalidates adoption when the baseline source is removed
+AssertionError: expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equality
+
+Expected: "UNKNOWN"
+Received: "VERIFIED_ADOPTION"
+
+  tests/adoption-engine.test.ts:81:26
+     79|     );
+     80|     const result = evaluateAdoption(input);
+     81|     expect(result.state).toBe("UNKNOWN");
+       |                          ^
+     82|     expect(result.heldFields).toContain("baseline_source");
+     83|   });
+
+[1/2]
+
+ FAIL  tests/adoption-engine.test.ts > critical adoption validator > invalidates adoption when the clinic first-value source is removed
+AssertionError: expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equality
+
+Expected: "UNKNOWN"
+Received: "VERIFIED_ADOPTION"
+
+  tests/adoption-engine.test.ts:91:26
+     89|     );
+     90|     const result = evaluateAdoption(input);
+     91|     expect(result.state).toBe("UNKNOWN");
+       |                          ^
+     92|     expect(result.heldFields).toContain("clinic_first_value_source");
+     93|   });
+
+[2/2]
+
+=== MUTANT_BLOCKER_ACTION_EXPECT_FAIL ===
+exit=1
+
+ RUN  v3.2.7 <repo>
+
+  tests/adoption-engine.test.ts (15 tests | 1 failed) 13ms
+    critical adoption validator > holds stale critical evidence as UNKNOWN 2ms
+    critical adoption validator > does not treat internal resolution as customer-validated closure 0ms
+    critical adoption validator > allows verified adoption only with repeat use and current human validation 0ms
+    critical adoption validator > fails closed when summary fields have no source records 0ms
+    critical adoption validator > rejects an invalid or future source timestamp 0ms
+    critical adoption validator > rejects a usage summary that does not match its source version and counts 0ms
+    critical adoption validator > rejects repeat-use periods that exceed distinct evidenced periods 0ms
+    critical adoption validator > invalidates validation when the current product version changes 0ms
+    critical adoption validator > invalidates adoption when the baseline source is removed 0ms
+    critical adoption validator > invalidates adoption when the clinic first-value source is removed 0ms
+    critical adoption validator > invalidates adoption when blocker or action sources are removed 6ms
+      expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equality
+    critical adoption validator > keeps proof held until each named approval source exists 1ms
+    critical adoption validator > makes proof eligible only from exact approval records 0ms
+    critical adoption validator > rejects expired or self-approved proof records 0ms
+    critical adoption validator > builds every trace stage from exact IDs rather than array position 1ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 passed (15)
+   Start at  09:59:14
+   Duration  518ms (transform 55ms, setup 0ms, collect 83ms, tests 13ms, environment 0ms, prepare 173ms)
+
+
+
+ Failed Tests 1
+
+ FAIL  tests/adoption-engine.test.ts > critical adoption validator > invalidates adoption when blocker or action sources are removed
+AssertionError: expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equality
+
+Expected: "UNKNOWN"
+Received: "VERIFIED_ADOPTION"
+
+  tests/adoption-engine.test.ts:102:28
+    100|       );
+    101|       const result = evaluateAdoption(input);
+    102|       expect(result.state).toBe("UNKNOWN");
+       |                            ^
+    103|       expect(
+    104|         result.heldFields.some((field) =>
 
 [1/1]
 
@@ -47,51 +164,55 @@ exit=1
 
  RUN  v3.2.7 <repo>
 
-  tests/adoption-engine.test.ts (11 tests | 2 failed) 21ms
-    critical adoption validator > holds stale critical evidence as UNKNOWN 3ms
-    critical adoption validator > does not treat internal resolution as customer-validated closure 1ms
+  tests/adoption-engine.test.ts (15 tests | 2 failed) 16ms
+    critical adoption validator > holds stale critical evidence as UNKNOWN 2ms
+    critical adoption validator > does not treat internal resolution as customer-validated closure 0ms
     critical adoption validator > allows verified adoption only with repeat use and current human validation 0ms
-    critical adoption validator > fails closed when summary fields have no source records 10ms
-      expected [ 'current_usage_snapshot', (2) ] to include 'current_product_release'
-    critical adoption validator > rejects an invalid or future source timestamp 1ms
+    critical adoption validator > fails closed when summary fields have no source records 7ms
+      expected [ 'baseline_source', (7) ] to include 'current_product_release'
+    critical adoption validator > rejects an invalid or future source timestamp 0ms
     critical adoption validator > rejects a usage summary that does not match its source version and counts 0ms
     critical adoption validator > rejects repeat-use periods that exceed distinct evidenced periods 0ms
     critical adoption validator > invalidates validation when the current product version changes 1ms
-      expected [ 'current_usage_snapshot', (2) ] to include 'current_product_release'
+      expected [ 'enablement_source', (6) ] to include 'current_product_release'
+    critical adoption validator > invalidates adoption when the baseline source is removed 0ms
+    critical adoption validator > invalidates adoption when the clinic first-value source is removed 1ms
+    critical adoption validator > invalidates adoption when blocker or action sources are removed 0ms
     critical adoption validator > keeps proof held until each named approval source exists 1ms
     critical adoption validator > makes proof eligible only from exact approval records 0ms
     critical adoption validator > rejects expired or self-approved proof records 0ms
+    critical adoption validator > builds every trace stage from exact IDs rather than array position 1ms
 
  Test Files  1 failed (1)
-      Tests  2 failed | 9 passed (11)
-   Start at  09:29:26
-   Duration  982ms (transform 95ms, setup 0ms, collect 94ms, tests 21ms, environment 0ms, prepare 310ms)
+      Tests  2 failed | 13 passed (15)
+   Start at  09:59:15
+   Duration  741ms (transform 60ms, setup 0ms, collect 73ms, tests 16ms, environment 0ms, prepare 396ms)
 
 
 
  Failed Tests 2
 
  FAIL  tests/adoption-engine.test.ts > critical adoption validator > fails closed when summary fields have no source records
-AssertionError: expected [ 'current_usage_snapshot', (2) ] to include 'current_product_release'
-  tests/adoption-engine.test.ts:32:31
-     30|     const result = evaluateAdoption(input);
-     31|     expect(result.state).toBe("UNKNOWN");
-     32|     expect(result.heldFields).toContain("current_product_release");
+AssertionError: expected [ 'baseline_source', (7) ] to include 'current_product_release'
+  tests/adoption-engine.test.ts:33:31
+     31|     const result = evaluateAdoption(input);
+     32|     expect(result.state).toBe("UNKNOWN");
+     33|     expect(result.heldFields).toContain("current_product_release");
        |                               ^
-     33|     expect(result.heldFields).toContain("current_usage_snapshot");
-     34|     expect(result.heldFields).toContain("current_product_version_valid
+     34|     expect(result.heldFields).toContain("current_usage_snapshot");
+     35|     expect(result.heldFields).toContain("current_product_version_valid
 
 [1/2]
 
  FAIL  tests/adoption-engine.test.ts > critical adoption validator > invalidates validation when the current product version changes
-AssertionError: expected [ 'current_usage_snapshot', (2) ] to include 'current_product_release'
-  tests/adoption-engine.test.ts:70:31
-     68|     const result = evaluateAdoption(input);
-     69|     expect(result.state).toBe("UNKNOWN");
-     70|     expect(result.heldFields).toContain("current_product_release");
+AssertionError: expected [ 'enablement_source', (6) ] to include 'current_product_release'
+  tests/adoption-engine.test.ts:71:31
+     69|     const result = evaluateAdoption(input);
+     70|     expect(result.state).toBe("UNKNOWN");
+     71|     expect(result.heldFields).toContain("current_product_release");
        |                               ^
-     71|     expect(result.heldFields).toContain("current_product_version_valid
-     72|   });
+     72|     expect(result.heldFields).toContain("current_product_version_valid
+     73|   });
 
 [2/2]
 
@@ -100,26 +221,30 @@ exit=1
 
  RUN  v3.2.7 <repo>
 
-  tests/adoption-engine.test.ts (11 tests | 3 failed) 23ms
-    critical adoption validator > holds stale critical evidence as UNKNOWN 12ms
+  tests/adoption-engine.test.ts (15 tests | 3 failed) 15ms
+    critical adoption validator > holds stale critical evidence as UNKNOWN 6ms
       expected 'FIRST_VALUE' to be 'UNKNOWN' // Object.is equality
     critical adoption validator > does not treat internal resolution as customer-validated closure 1ms
     critical adoption validator > allows verified adoption only with repeat use and current human validation 0ms
-    critical adoption validator > fails closed when summary fields have no source records 5ms
-      expected [ 'current_product_release', (2) ] to include 'current_usage_snapshot'
-    critical adoption validator > rejects an invalid or future source timestamp 1ms
-    critical adoption validator > rejects a usage summary that does not match its source version and counts 1ms
+    critical adoption validator > fails closed when summary fields have no source records 3ms
+      expected [ 'baseline_source', (7) ] to include 'current_usage_snapshot'
+    critical adoption validator > rejects an invalid or future source timestamp 0ms
+    critical adoption validator > rejects a usage summary that does not match its source version and counts 0ms
       expected [ 'repeat_use_periods' ] to include 'current_usage_snapshot'
     critical adoption validator > rejects repeat-use periods that exceed distinct evidenced periods 0ms
     critical adoption validator > invalidates validation when the current product version changes 0ms
-    critical adoption validator > keeps proof held until each named approval source exists 1ms
+    critical adoption validator > invalidates adoption when the baseline source is removed 0ms
+    critical adoption validator > invalidates adoption when the clinic first-value source is removed 0ms
+    critical adoption validator > invalidates adoption when blocker or action sources are removed 0ms
+    critical adoption validator > keeps proof held until each named approval source exists 0ms
     critical adoption validator > makes proof eligible only from exact approval records 0ms
     critical adoption validator > rejects expired or self-approved proof records 0ms
+    critical adoption validator > builds every trace stage from exact IDs rather than array position 1ms
 
  Test Files  1 failed (1)
-      Tests  3 failed | 8 passed (11)
-   Start at  09:29:28
-   Duration  872ms (transform 90ms, setup 0ms, collect 95ms, tests 23ms, environment 0ms, prepare 347ms)
+      Tests  3 failed | 12 passed (15)
+   Start at  09:59:16
+   Duration  579ms (transform 55ms, setup 0ms, collect 69ms, tests 15ms, environment 0ms, prepare 165ms)
 
 
 
@@ -131,37 +256,37 @@ AssertionError: expected 'FIRST_VALUE' to be 'UNKNOWN' // Object.is equality
 Expected: "UNKNOWN"
 Received: "FIRST_VALUE"
 
-  tests/adoption-engine.test.ts:11:26
-      9|   it("holds stale critical evidence as UNKNOWN", () => {
-     10|     const result = evaluateAdoption(syntheticWorkflows.staleEvidence);
-     11|     expect(result.state).toBe("UNKNOWN");
+  tests/adoption-engine.test.ts:12:26
+     10|   it("holds stale critical evidence as UNKNOWN", () => {
+     11|     const result = evaluateAdoption(syntheticWorkflows.staleEvidence);
+     12|     expect(result.state).toBe("UNKNOWN");
        |                          ^
-     12|     expect(result.heldFields).toContain("current_usage_snapshot");
-     13|   });
+     13|     expect(result.heldFields).toContain("current_usage_snapshot");
+     14|   });
 
 [1/3]
 
  FAIL  tests/adoption-engine.test.ts > critical adoption validator > fails closed when summary fields have no source records
-AssertionError: expected [ 'current_product_release', (2) ] to include 'current_usage_snapshot'
-  tests/adoption-engine.test.ts:33:31
-     31|     expect(result.state).toBe("UNKNOWN");
-     32|     expect(result.heldFields).toContain("current_product_release");
-     33|     expect(result.heldFields).toContain("current_usage_snapshot");
+AssertionError: expected [ 'baseline_source', (7) ] to include 'current_usage_snapshot'
+  tests/adoption-engine.test.ts:34:31
+     32|     expect(result.state).toBe("UNKNOWN");
+     33|     expect(result.heldFields).toContain("current_product_release");
+     34|     expect(result.heldFields).toContain("current_usage_snapshot");
        |                               ^
-     34|     expect(result.heldFields).toContain("current_product_version_valid
-     35|   });
+     35|     expect(result.heldFields).toContain("current_product_version_valid
+     36|   });
 
 [2/3]
 
  FAIL  tests/adoption-engine.test.ts > critical adoption validator > rejects a usage summary that does not match its source version and counts
 AssertionError: expected [ 'repeat_use_periods' ] to include 'current_usage_snapshot'
-  tests/adoption-engine.test.ts:54:31
-     52|     const result = evaluateAdoption(input);
-     53|     expect(result.state).toBe("UNKNOWN");
-     54|     expect(result.heldFields).toContain("current_usage_snapshot");
+  tests/adoption-engine.test.ts:55:31
+     53|     const result = evaluateAdoption(input);
+     54|     expect(result.state).toBe("UNKNOWN");
+     55|     expect(result.heldFields).toContain("current_usage_snapshot");
        |                               ^
-     55|   });
-     56|
+     56|   });
+     57|
 
 [3/3]
 
@@ -170,24 +295,28 @@ exit=1
 
  RUN  v3.2.7 <repo>
 
-  tests/adoption-engine.test.ts (11 tests | 1 failed) 20ms
-    critical adoption validator > holds stale critical evidence as UNKNOWN 4ms
+  tests/adoption-engine.test.ts (15 tests | 1 failed) 12ms
+    critical adoption validator > holds stale critical evidence as UNKNOWN 2ms
     critical adoption validator > does not treat internal resolution as customer-validated closure 0ms
     critical adoption validator > allows verified adoption only with repeat use and current human validation 0ms
-    critical adoption validator > fails closed when summary fields have no source records 1ms
+    critical adoption validator > fails closed when summary fields have no source records 0ms
     critical adoption validator > rejects an invalid or future source timestamp 0ms
     critical adoption validator > rejects a usage summary that does not match its source version and counts 0ms
-    critical adoption validator > rejects repeat-use periods that exceed distinct evidenced periods 11ms
+    critical adoption validator > rejects repeat-use periods that exceed distinct evidenced periods 6ms
       expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equality
     critical adoption validator > invalidates validation when the current product version changes 0ms
-    critical adoption validator > keeps proof held until each named approval source exists 1ms
+    critical adoption validator > invalidates adoption when the baseline source is removed 0ms
+    critical adoption validator > invalidates adoption when the clinic first-value source is removed 0ms
+    critical adoption validator > invalidates adoption when blocker or action sources are removed 0ms
+    critical adoption validator > keeps proof held until each named approval source exists 0ms
     critical adoption validator > makes proof eligible only from exact approval records 0ms
     critical adoption validator > rejects expired or self-approved proof records 0ms
+    critical adoption validator > builds every trace stage from exact IDs rather than array position 1ms
 
  Test Files  1 failed (1)
-      Tests  1 failed | 10 passed (11)
-   Start at  09:29:30
-   Duration  924ms (transform 85ms, setup 0ms, collect 97ms, tests 20ms, environment 0ms, prepare 297ms)
+      Tests  1 failed | 14 passed (15)
+   Start at  09:59:17
+   Duration  609ms (transform 64ms, setup 0ms, collect 79ms, tests 12ms, environment 0ms, prepare 165ms)
 
 
 
@@ -199,13 +328,13 @@ AssertionError: expected 'VERIFIED_ADOPTION' to be 'UNKNOWN' // Object.is equali
 Expected: "UNKNOWN"
 Received: "VERIFIED_ADOPTION"
 
-  tests/adoption-engine.test.ts:61:26
-     59|     input.repeatUsePeriods = 4;
-     60|     const result = evaluateAdoption(input);
-     61|     expect(result.state).toBe("UNKNOWN");
+  tests/adoption-engine.test.ts:62:26
+     60|     input.repeatUsePeriods = 4;
+     61|     const result = evaluateAdoption(input);
+     62|     expect(result.state).toBe("UNKNOWN");
        |                          ^
-     62|     expect(result.heldFields).toContain("repeat_use_periods");
-     63|   });
+     63|     expect(result.heldFields).toContain("repeat_use_periods");
+     64|   });
 
 [1/1]
 
@@ -214,51 +343,55 @@ exit=1
 
  RUN  v3.2.7 <repo>
 
-  tests/adoption-engine.test.ts (11 tests | 2 failed) 23ms
-    critical adoption validator > holds stale critical evidence as UNKNOWN 3ms
+  tests/adoption-engine.test.ts (15 tests | 2 failed) 18ms
+    critical adoption validator > holds stale critical evidence as UNKNOWN 2ms
     critical adoption validator > does not treat internal resolution as customer-validated closure 0ms
     critical adoption validator > allows verified adoption only with repeat use and current human validation 0ms
-    critical adoption validator > fails closed when summary fields have no source records 12ms
-      expected [ 'current_product_release', (2) ] to include 'current_product_version_validation'
-    critical adoption validator > rejects an invalid or future source timestamp 1ms
+    critical adoption validator > fails closed when summary fields have no source records 7ms
+      expected [ 'baseline_source', (7) ] to include 'current_product_version_validation'
+    critical adoption validator > rejects an invalid or future source timestamp 0ms
     critical adoption validator > rejects a usage summary that does not match its source version and counts 0ms
     critical adoption validator > rejects repeat-use periods that exceed distinct evidenced periods 0ms
     critical adoption validator > invalidates validation when the current product version changes 1ms
-      expected [ 'current_product_release', (2) ] to include 'current_product_version_validation'
+      expected [ 'enablement_source', (6) ] to include 'current_product_version_validation'
+    critical adoption validator > invalidates adoption when the baseline source is removed 0ms
+    critical adoption validator > invalidates adoption when the clinic first-value source is removed 0ms
+    critical adoption validator > invalidates adoption when blocker or action sources are removed 0ms
     critical adoption validator > keeps proof held until each named approval source exists 1ms
     critical adoption validator > makes proof eligible only from exact approval records 1ms
-    critical adoption validator > rejects expired or self-approved proof records 1ms
+    critical adoption validator > rejects expired or self-approved proof records 0ms
+    critical adoption validator > builds every trace stage from exact IDs rather than array position 1ms
 
  Test Files  1 failed (1)
-      Tests  2 failed | 9 passed (11)
-   Start at  09:29:32
-   Duration  834ms (transform 84ms, setup 0ms, collect 100ms, tests 23ms, environment 0ms, prepare 316ms)
+      Tests  2 failed | 13 passed (15)
+   Start at  09:59:19
+   Duration  524ms (transform 59ms, setup 0ms, collect 84ms, tests 18ms, environment 0ms, prepare 184ms)
 
 
 
  Failed Tests 2
 
  FAIL  tests/adoption-engine.test.ts > critical adoption validator > fails closed when summary fields have no source records
-AssertionError: expected [ 'current_product_release', (2) ] to include 'current_product_version_validation'
-  tests/adoption-engine.test.ts:34:31
-     32|     expect(result.heldFields).toContain("current_product_release");
-     33|     expect(result.heldFields).toContain("current_usage_snapshot");
-     34|     expect(result.heldFields).toContain("current_product_version_valid
+AssertionError: expected [ 'baseline_source', (7) ] to include 'current_product_version_validation'
+  tests/adoption-engine.test.ts:35:31
+     33|     expect(result.heldFields).toContain("current_product_release");
+     34|     expect(result.heldFields).toContain("current_usage_snapshot");
+     35|     expect(result.heldFields).toContain("current_product_version_valid
        |                               ^
-     35|   });
-     36|
+     36|   });
+     37|
 
 [1/2]
 
  FAIL  tests/adoption-engine.test.ts > critical adoption validator > invalidates validation when the current product version changes
-AssertionError: expected [ 'current_product_release', (2) ] to include 'current_product_version_validation'
-  tests/adoption-engine.test.ts:71:31
-     69|     expect(result.state).toBe("UNKNOWN");
-     70|     expect(result.heldFields).toContain("current_product_release");
-     71|     expect(result.heldFields).toContain("current_product_version_valid
+AssertionError: expected [ 'enablement_source', (6) ] to include 'current_product_version_validation'
+  tests/adoption-engine.test.ts:72:31
+     70|     expect(result.state).toBe("UNKNOWN");
+     71|     expect(result.heldFields).toContain("current_product_release");
+     72|     expect(result.heldFields).toContain("current_product_version_valid
        |                               ^
-     72|   });
-     73|
+     73|   });
+     74|
 
 [2/2]
 
@@ -267,21 +400,21 @@ exit=0
 
  RUN  v3.2.7 <repo>
 
-  tests/adoption-engine.test.ts (11 tests) 13ms
+  tests/adoption-engine.test.ts (15 tests) 7ms
 
  Test Files  1 passed (1)
-      Tests  11 passed (11)
-   Start at  09:29:34
-   Duration  745ms (transform 73ms, setup 0ms, collect 82ms, tests 13ms, environment 0ms, prepare 237ms)
+      Tests  15 passed (15)
+   Start at  09:59:20
+   Duration  609ms (transform 67ms, setup 0ms, collect 77ms, tests 7ms, environment 0ms, prepare 157ms)
 
 === RESTORED_RUN_2_EXPECT_PASS ===
 exit=0
 
  RUN  v3.2.7 <repo>
 
-  tests/adoption-engine.test.ts (11 tests) 13ms
+  tests/adoption-engine.test.ts (15 tests) 7ms
 
  Test Files  1 passed (1)
-      Tests  11 passed (11)
-   Start at  09:29:35
-   Duration  1.07s (transform 99ms, setup 0ms, collect 124ms, tests 13ms, environment 0ms, prepare 389ms)
+      Tests  15 passed (15)
+   Start at  09:59:21
+   Duration  461ms (transform 59ms, setup 0ms, collect 72ms, tests 7ms, environment 0ms, prepare 171ms)

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  BadgeCheck,
   Blocks,
   BookOpenCheck,
   BriefcaseBusiness,
@@ -22,6 +23,7 @@ const nav = [
   { href: "/", label: "Adoption", icon: LayoutDashboard },
   { href: "/clinics", label: "Clinics", icon: ClipboardCheck },
   { href: "/blockers", label: "Blockers", icon: Blocks },
+  { href: "/validations", label: "Validations", icon: BadgeCheck },
   { href: "/experiments", label: "Experiments", icon: FlaskConical },
   { href: "/playbooks", label: "Playbooks", icon: BookOpenCheck },
   { href: "/proof", label: "Proof", icon: ShieldCheck },

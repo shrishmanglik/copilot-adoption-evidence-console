@@ -16,6 +16,16 @@ const mutants = [
     expectedTest: "rejects an invalid or future source timestamp",
   },
   {
+    id: "FOUNDATION_CHAIN",
+    expectedTest:
+      "invalidates adoption when the clinic first-value source is removed",
+  },
+  {
+    id: "BLOCKER_ACTION",
+    expectedTest:
+      "invalidates adoption when blocker or action sources are removed",
+  },
+  {
     id: "CURRENT_RELEASE",
     expectedTest:
       "invalidates validation when the current product version changes",

@@ -81,4 +81,27 @@ describe("Supabase schema contract", () => {
       "create policy evidence_operator_insert on public.evidence_records for insert",
     );
   });
+
+  it("binds every child row to a parent in the same tenant", () => {
+    expect(sql).toContain("unique (organization_id, id)");
+    expect(sql).toContain(
+      "foreign key (organization_id, account_id) references public.customer_accounts(organization_id, id)",
+    );
+    for (const table of [
+      "evidence_records",
+      "blockers",
+      "adoption_receipts",
+      "approvals",
+      "audit_events",
+    ]) {
+      const tableDefinition = sql.match(
+        new RegExp(`create table public\\.${table} \\(([\\s\\S]*?)\\n\\);`),
+      )?.[1];
+      expect(tableDefinition).toContain(
+        "foreign key (organization_id, workflow_id) references public.workflow_definitions(organization_id, id)",
+      );
+    }
+    expect(sql).not.toContain("references public.customer_accounts(id)");
+    expect(sql).not.toContain("references public.workflow_definitions(id)");
+  });
 });
